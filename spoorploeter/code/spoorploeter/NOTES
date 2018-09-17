@@ -1,0 +1,16 @@
+VJ traceroute:
+  https://wiki.geant.org/display/public/EK/VanJacobsonTraceroute
+  ftp://ftp.ee.lbl.gov/traeroute-1.4a12.tar.gz
+
+Really basic traceroute in python:
+  https://dnaeon.github.io/traceroute-in-python/
+
+We want:
+  to be able to specify a set of source addresses
+  to send probes for a large number of addresses
+  to send over IPv4 or IPv6, depending on the address provided
+  to send a configurable number of probes with each TTL
+  to send probes with all values up to some specified maximum TTL
+  to specify the sending rate
+  to be able to interrupt and restart the sending process
+
