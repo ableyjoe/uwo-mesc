@@ -1,0 +1,98 @@
+\documentclass[9pt,letterpaper,twocolumn]{scrartcl}
+
+\usepackage{cite}
+\usepackage{url}
+
+\begin{document}
+
+\titlehead{{\Large Western University \hfill ECE 9603\\}
+  Electrical and Computer Engineering \hfill Fall 2018}
+\subject{Project Proposal}
+\title{Predicting the Origin of DNS Traffic Without Reference to Client Source Address}
+\author{Joe Abley}
+
+\maketitle
+
+% \begin{abstract}
+% We propose a predictive system which is able to identify the
+% originating system responsible for stateless Domain Name System
+% (DNS) traffic received at a authoritative DNS server without
+% reference to the source address. The ability to predict whether
+% particular DNS query traffic received at an authoritative server
+% is legitimately sourced from a particular client system is useful
+% in identifying some classes of malicious traffic in production DNS
+% systems.
+% \end{abstract}
+
+\section{Problem Description}
+The Domain Name System (DNS) includes a wire protocol with which
+structured requests and responses are exchanged over a network. The
+DNS protocol is specified and widely used using the UDP transport
+protocol.  Since UDP is stateless there is no way for the receiver
+of a DNS request sent over UDP to verify the legitimacy of a source
+address.  A consequence of this is that DNS servers are frequently
+used as amplifiers in reflection attacks\cite{RFC5358}. Although
+some such attacks are trivially identified, for example by Query
+Type (QTYPE), many are more difficult.  By choosing query parameters
+that match legitimate, real-world use of the DNS, the attacks may
+seem impractical to block without collateral damage. This is
+especially true of amplification attacks against DNS resolvers.
+
+The goal of this project is to construct a classifier that can
+distinguish between a stream of DNS queries received from one
+real-world client and a stream received from another without reference
+to source address, based on training sets derived from queries whose
+origin is accurately known.
+
+\section{Data Sets}
+Afilias operates authoritative DNS servers for the INFO top-level
+domain, as well as many others. These servers are made available
+to the Internet through commodity transit arrangements from multiple
+locations using anycast\cite{RFC4786}, as well as through so-called
+Private Network Interconnects (PNIs). The origin of queries received
+over PNIs can be said to be known with high accuracy; the origin
+of queries received over the Internet, however, cannot in general
+be trusted.
+
+Complete sets of query data received over both trusted and untrusted
+paths are available from Afilias for use in this project in the
+form of packet captures in PCAP format\footnote{PCAP, named after
+the C library \texttt{libpcap}, is the file format used by the
+\texttt{tcpdump} utility.}.
+
+Time-series data sets are constructed from query data by identifying
+features that distinguish different queries and creating a vector
+of metrics for each class of queries along a time axis calculated
+within regular time intervals. Examples of features are the proportion
+of queries with \texttt{QTYPE=MX} or the number of labels in the
+Query Name; corresponding coordinates in the time-series vector
+might be the mean, standard deviation and 90th percentile of each
+such metric. This method has been used successfully by Castro and Qiao to
+build similar classifiers based on DNS query data\cite{CastroQiao}.
+
+The identification of a set of features that allows a useful
+classifier to be trained is the primary desired result of this
+project. Choice of algorithm, hyperparameters, etc is expected to
+be determined automatically using a suitable machine learning toolkit
+such as \texttt{auto-sklearn}\cite{NIPS2015_5872}.
+
+\section{Real-World Applications}
+Traffic received over the Internet that purports to be from a
+particular client but which is classified otherwise can be isolated
+itself be subject to classification. Being able to classify known-bad
+traffic from packet captures after the fact is useful in forensic
+analysis of strange traffic patterns (e.g. noticeable spikes in
+traffic volume) and potentially also for use in real-time if the
+matching criteria can be distilled down into something with low
+cost to execute, like a Bloom filter.
+
+Finding traffic from known clients arriving from an unexpected
+direction also has the potential to inform operational management
+systems, e.g. causing an alarm in the network operations centre
+that could prompt an escalation. An example of such a client might
+be Google Public DNS, who are relied upon by a large number of
+end-users.
+
+\bibliographystyle{abbrvurl}
+\bibliography{ECE-9603A-Abley}
+\end{document}
