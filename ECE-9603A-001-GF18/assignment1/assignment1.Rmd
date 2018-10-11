@@ -1,39 +1,65 @@
 ---
-title: "ECE-9603A Assignment 1"
-author: "Joe Abley"
+title: "ECE-9603A Assignment 1: Forecasting"
+author: "Joe Abley -- jabley@uwo.ca"
+date: 2018-10-10
 output:
   pdf_document:
     toc: true
 ---
 
-# Introduction
+# Abstract
 
-This document is a submission in response to Assignment 1 in the course ECE-9603A, Fall 2018, Western University Faculty of Engineering, Department of Electrical and Computer Engineering. It has been written in [R Markdown](https://rmarkdown.rstudio.com), and the document source can be found in [this GitHub repository](https://github.com/ableyjoe/uwo-mesc/tree/master/ECE-9603A-001-GF18/assignment1).
+This paper is submitted for Assignment 1, ECE-9603A, Fall 2018, Western University Faculty of Engineering, Department of Electrical and Computer Engineering. It has been written in R Markdown\footnote{\url{https://rmarkdown.rstudio.com}}; the code used to produce the output included in this document is included with the document source\footnote{\url{https://github.com/ableyjoe/uwo-mesc/tree/master/ECE-9603A-001-GF18/assignment1}}.
 
-## Packages
+The subject of this assignment is experimentation with different forecasting approaches and algorithms.
 
-```{r results = 'hide'}
+\newpage
+
+```{r echo = FALSE, message = FALSE}
 library(e1071)
+library(rpart)
 library(randomForest)
 library(ggplot2)
 library(scales)
-library(ggrepel)
-library(Metrics)
+library(gbm)
 ```
 
 # Forecasting Problem
 
-Given a dataset that describes various features of individual houses along with details of their sale, identify forecasting models that are able to predict the prices realised by the sale of houses at particular times.
+Given a dataset that describes various features of individual houses along with details of their sale, identify and test forecasting models that are able to predict the prices realised by the sale of houses based on an appropriate set of parameters.
 
 # Available Data
 
-We make use of a dataset that describes house sales in Iowa, published on and retrieved from Kaggle as part of a [Kaggle](https://www.kaggle.com/) competition entitled ["House Prices: Advanced Regression Techniques"](https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data). This data set was suggested in the assignment directions.
+We make use of a dataset that describes house sales in Iowa, published on and retrieved from Kaggle as part of a Kaggle\footnote{\url{https://www.kaggle.com/}} competition entitled "House Prices: Advanced Regression Techniques"\footnote{\url{https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data}}. This data set was suggested in directions for this assignment.
 
 ## Importing Data
 
-```{r results = 'hide'}
+Two datasets are provided, a training set and a test set:
+
+```{r}
 train <- read.csv("train.csv")
 test <- read.csv("test.csv")
+```
+
+However, the `test` set does not contain a `SalePrice` column: the objective of the competition is to populate one with predicted values. The `train` set does, however.
+
+```{r}
+summary(train$SalePrice)
+summary(test$SalePrice)
+```
+
+In order to cross-validate the accuracy of the predictions used by different models it will be convenient to have a test set that includes a `SalePrice` column. We shall therefore discard the supplied test set and construct a replacement from the supplied train set. The train set will be reduced correspondingly in order to avoid contamination.
+
+```{r}
+data <- train
+
+# start again to ensure the intersection between test and train is null
+rm(test)
+rm(train)
+
+sample <- sample.int(n = nrow(data), size = floor(0.2 * nrow(data)))
+train <- data[-sample,]
+test <- data[sample,]
 ```
 
 ## Abridged Feature Engineering
@@ -42,7 +68,7 @@ test <- read.csv("test.csv")
 dim(train)
 ```
 
-There are 1460 rows in this dataset and 81 columns. Of those columns one is a numeric id and one is the sale price; the other 79 are parameters that describe each house, some of which are numeric variables and some of which are categories.
+There are 1168 rows in this dataset and 81 columns. Of those columns one is a numeric id and one is the sale price; the other 79 are parameters that describe each house, some of which are numeric variables and some of which are categories.
 
 From the description provided with the source data, the numeric variables are as follows:
 
@@ -139,6 +165,34 @@ ggplot(data=train[!is.na(train$SalePrice),], aes(x = SalePrice)) +
   scale_x_continuous(breaks = seq(0, 800000, by = 100000), labels = comma)
 ```
 
+This distribution is observed to be skewed to the right, as can be confirmed numerically:
+
+```{r}
+skewness(train$SalePrice)
+```
+
+The positive result confirms a skew to the right. We transform `SalePrice` data by replacing it with `log(SalePrice + 1)`:
+
+```{r}
+train$SalePrice <- log(train$SalePrice + 1)
+summary(train$SalePrice)
+skewness(train$SalePrice)
+```
+
+The skew is now much closer to zero, as can be confirmed visually:
+
+```{r}
+ggplot(data=train, aes(x = SalePrice)) +
+  geom_histogram(binwidth = 0.05) +
+  scale_x_continuous(breaks = seq(0, 20, by = 1), labels = comma)
+```
+
+We apply the same logarithmic transform to the test set:
+
+```{r}
+test$SalePrice <- log(test$SalePrice + 1)
+```
+
 \newpage
 
 ## newBathrooms
@@ -146,15 +200,22 @@ ggplot(data=train[!is.na(train$SalePrice),], aes(x = SalePrice)) +
 The total number of bathrooms seems to correlate to `SalePrice`, although there are a small number of outliers that suggest that at some point you really don't get much value from adding more toilets.
 
 ```{r}
-ggplot(data=train[!is.na(train$SalePrice),], aes(x=newBathrooms, y=SalePrice)) +
+ggplot(data=train, aes(x=newBathrooms, y=SalePrice)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
-  scale_y_continuous(breaks= seq(0, 800000, by=100000), labels = comma) +
-  geom_text_repel(aes(label = ifelse(train$newBathrooms[!is.na(train$SalePrice)] > 5,
-    rownames(train), '')))
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
 ```
 
-The houses with six bathrooms don't seem to fit a linear relationship very well; they are labelled in the graph above in case we need some persistent troublemakers to eliminate as we build our models later.
+The houses with six bathrooms don't seem to fit a linear relationship very well. Since they represent a tiny minority of the observations they will be eliminated as outliers.
+
+```{r}
+train <- train[train$newBathrooms < 6, ]
+
+ggplot(data=train, aes(x=newBathrooms, y=SalePrice)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
+```
 
 \newpage
 
@@ -163,149 +224,268 @@ The houses with six bathrooms don't seem to fit a linear relationship very well;
 For many houses there seems to be a strong correlation between `LotArea` and `SalePrice`. As with the tentative toilet hypothesis, however, it seems possible that the size of the lot beyond a certain point just starts to seem more annoying to mow.
 
 ```{r}
-ggplot(data=train[!is.na(train$SalePrice),], aes(x=LotArea, y=SalePrice)) +
+ggplot(data=train, aes(x=LotArea, y=SalePrice)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
-  scale_y_continuous(breaks= seq(0, 800000, by=100000), labels = comma) +
-  geom_text_repel(aes(label = ifelse(train$LotArea[!is.na(train$SalePrice)] > 100000,
-    rownames(train), '')))
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
 ```
 
-The properties with lot areas larger than 100,000 square feet have bee labelled as candidates for shunning.
+We will try to transform the `LotArea` variable as `log(LotArea)` to see whether that provides a more convincing linear relationship.
+
+```{r}
+train$LotArea <- log(train$LotArea + 1)
+summary(train$LotArea)
+
+ggplot(data=train, aes(x=LotArea, y=SalePrice)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
+```
+
+This looks slightly more convincing, although it does not show strong correlation. We will apply the same logarithmic transform to the test set.
+
+```{r}
+test$LotArea <- log(test$LotArea + 1)
+```
 
 \newpage
 
 ## TotalBsmtSF
 
-A strong linear correlation is observed between `TotalBsmtSF` and `SalePrice`, with just a single outlier that we might imagine corresponds to a basement that is over-large for an unsavoury reason.
+A positive correlation is observed between `TotalBsmtSF` and `SalePrice`, with just a single outlier that we might imagine corresponds to a basement that is over-large for an unsavoury reason.
 
 ```{r}
-ggplot(data=train[!is.na(train$SalePrice),], aes(x=TotalBsmtSF, y=SalePrice)) +
+ggplot(data=train, aes(x=TotalBsmtSF, y=SalePrice)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
-  scale_y_continuous(breaks= seq(0, 800000, by=100000), labels = comma) +
-  geom_text_repel(aes(label = ifelse(train$TotalBsmtSF[!is.na(train$SalePrice)] > 4000,
-    rownames(train), '')))
+  scale_y_continuous(breaks = seq(0, 20, by=1), labels = comma)
 ```
 
-The problem basement has once again been labelled, above.
+We remove the property with the lurking, sub-grade menace, and also scale the variable to bring it into the same order of magnitude as the other variables considered so far:
+
+```{r}
+train <- train[train$TotalBsmtSF < 4000, ]
+train$TotalBsmtSF <- (train$TotalBsmtSF / 200)
+
+ggplot(data=train, aes(x=TotalBsmtSF, y=SalePrice)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
+  scale_y_continuous(breaks = seq(0, 20, by=1), labels = comma)
+```
+
+We scale the corresponding variable in the test set in the same manner.
+
+```{r}
+test$TotalBsmtSF <- (test$TotalBsmtSF / 200)
+```
 
 \newpage
 
 ## GrLivArea
 
-There is a strong linear correlation observed between `GrLivArea` and `SalePrice`. The properties with a living area over 4,000 square feet seem to be outliers.
+There is a strong linear correlation observed between `GrLivArea` and `SalePrice`. The properties with a living area over 4,000 square feet seem to be outliers, but we don't expect them to exert too much influence over the model so we'll pretend we didn't notice.
 
 ```{r}
-ggplot(data=train[!is.na(train$SalePrice),], aes(x=GrLivArea, y=SalePrice)) +
+ggplot(data=train, aes(x=GrLivArea, y=SalePrice)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
-  scale_y_continuous(breaks= seq(0, 800000, by=100000), labels = comma) +
-  geom_text_repel(aes(label = ifelse(train$GrLivArea[!is.na(train$SalePrice)] > 4500,
-    rownames(train), '')))
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
 ```
 
-Since the outliers are somewhat evenly balanced above and below the line resulting from simple linear regression they do not appear to affect the legitimacy of the relationship; eliminating them would presumably not affect it either, however, so they are labelled.
+We scale the values in the training set to bring them into the same order of magnitude as the other variables:
+
+```{r}
+train$GrLivArea = (train$GrLivArea / 200)
+
+ggplot(data=train, aes(x=GrLivArea, y=SalePrice)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
+```
+
+We apply the same scaling transformation to the test set:
+
+```{r}
+test$GrLivArea = (test$GrLivArea / 200)
+```
 
 \newpage
 
 ## TotRmsAbvGrd
 
-There is a strong linear correlation observed between `TotRmsAbvGrd` and `SalePrice`. There is a single property with 14 rooms that seems excessive and strange.
+There is a strong linear correlation observed between `TotRmsAbvGrd` and `SalePrice`.
 
 ```{r}
-ggplot(data=train[!is.na(train$SalePrice),], aes(x=TotRmsAbvGrd, y=SalePrice)) +
+ggplot(data=train, aes(x=TotRmsAbvGrd, y=SalePrice)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
-  scale_y_continuous(breaks= seq(0, 800000, by=100000), labels = comma) +
-  geom_text_repel(aes(label = ifelse(train$TotRmsAbvGrd[!is.na(train$SalePrice)] > 13,
-    rownames(train), '')))
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
 ```
-
-The strange outlier has been labelled.
 
 \newpage
 
 ## Fireplaces
 
-The relevance of `Fireplaces` does not seem entirely clear, although a slight upward trend is certainly observed. People in Iowa like to burn things, but not *that* much.
+We observe a plausible correlation between the number of fireplaces and the sale price, although properties with three fireplaces seem to be outliers. People in Iowa like to burn things, but not *that* much.
 
 ```{r}
-ggplot(data=train[!is.na(train$SalePrice),], aes(x=Fireplaces, y=SalePrice)) +
+ggplot(data=train, aes(x=Fireplaces, y=SalePrice)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
-  scale_y_continuous(breaks= seq(0, 800000, by=100000), labels = comma) +
-  geom_text_repel(aes(label = ifelse(train$Fireplaces[!is.na(train$SalePrice)] > 2,
-    rownames(train), '')))
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
 ```
 
-The pyromaniac paradises have been labelled.
+We shall remove the pyromaniac palaces from the training set:
+
+```{r}
+train <- train[train$Fireplaces < 3, ]
+
+ggplot(data=train, aes(x=Fireplaces, y=SalePrice)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
+```
 
 \newpage
 
 ## GarageArea
 
-Properties with more garage space seem to command higher prices. The extremely large garages seem to have a lower impact on price.
+Properties with more garage space seem to command higher prices. The extremely large garages seem to have a lower impact on price, but there are not so many batcaves that we expect them to cause trouble.
 
 ```{r}
-ggplot(data=train[!is.na(train$SalePrice),], aes(x=GarageArea, y=SalePrice)) +
+ggplot(data=train, aes(x=GarageArea, y=SalePrice)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
-  scale_y_continuous(breaks= seq(0, 800000, by=100000), labels = comma) +
-  geom_text_repel(aes(label = ifelse(train$GarageArea[!is.na(train$SalePrice)] > 1200,
-    rownames(train), '')))
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
 ```
 
-The batcaves have been labelled.
+We scale the values down into the same order of magnitude as the others:
+
+```{r}
+train$GarageArea = (train$GarageArea / 100)
+
+ggplot(data=train, aes(x=GarageArea, y=SalePrice)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, colour = "blue", aes(group = 1)) +
+  scale_y_continuous(breaks= seq(0, 20, by=1), labels = comma)
+```
+
+We apply the same transform to the test set:
+
+```{r}
+test$GarageArea = (test$GarageArea / 100)
+```
 
 \newpage
-
-# Elimination of Outliers
-
-For the sake of simplicity we remove all the labelled properties in the previous section. There aren't that many of them, and it seems plausible that they all have some odd characteristic that has skewed their sale price and hence will not contribute productively to our modelling.
-
-```{r}
-train <- train[-c(167, 250, 310, 314, 336, 363, 524, 582, 606, 643, 692, 707, 739, 826,
-  922, 1062, 1183, 1191, 1299, 1351)]
-```
-
-Our final training set contains 1460 observations and just seven parameters, all of which appear to plausibly fit a linear relationship with `SalePrice`:
-
-```{r}
-dim(train)
-summary(train)
-```
 
 # Selected Algorithms
 
 ## Multivariate Regression
 
-Multivariate linear regression is a method of supervised regression, used to predict a numerical outcome from a set of observations. In this exercise we have identified seven features (`LotArea`, `TotalBsmtSF`, `GrLivArea`, `TotRmsAbvGrd`, `Fireplaces`, `GarageArea` and `newBathrooms`) and have eliminated a small number of outliers with the result that each of those features is observed to have a (different) linear relationship with `SalePrice`. Consequently, we will build and test a multivariate regression model with no further transforms and assess its goodness of fit.
+Multivariate linear regression is a method of supervised regression, used to predict a numerical outcome from a set of observations. In this exercise we have identified seven features (`LotArea`, `TotalBsmtSF`, `GrLivArea`, `TotRmsAbvGrd`, `Fireplaces`, `GarageArea` and `newBathrooms`); we have eliminated a small number of outliers and applied a logarithmic transform to some variables with the result that each of those features is observed to have a (different) linear relationship with `SalePrice`. Consequently, we will build and test a multivariate regression model with no further transforms and assess its goodness of fit.
 
 ```{r}
 modelLR <- lm(SalePrice ~ LotArea + TotalBsmtSF + GrLivArea +
   TotRmsAbvGrd + Fireplaces + GarageArea + newBathrooms, train)
 summary(modelLR)
-predictLR <- predict(modelLR, test, type = "response")
-outputLR <- cbind(test, predictLR)
-rmse(outputLR$SalePrice, outputLR$prediction)
+predictLR <- predict(modelLR, test)
+
+summary(test$SalePrice)
+summary(predictLR)
+
+# rmse
+RMSE <- function(x, y) {
+  a <- sqrt(mean((x - y)^2))
+  return(a)
+}
+
+RMSE(test$SalePrice, predictLR)
 ```
 
 ## Support Vector Regression
 
-Support Vector Regression (SVR) is another method of supervised regression. SVR is an adaptation of Support Vector Machines for function estimation, and is built around analogous hyperparameters, of which we are principally concerned with the soft margin loss setting $\epsilon$, an acceptable error in the resulting regression model.
+Support Vector Regression (SVR) is another method of supervised regression. SVR is an adaptation of Support Vector Machines for function estimation, and is built around analogous hyperparameters, of which we are principally concerned with the soft margin loss setting $\epsilon$, an acceptable error in the resulting regression model. We make no attempt to tune the default parameters in the model used here.
 
 ```{r}
 modelSVR <- svm(SalePrice ~ LotArea + TotalBsmtSF + GrLivArea +
   TotRmsAbvGrd + Fireplaces + GarageArea + newBathrooms, train)
 summary(modelSVR)
+predictSVR <- predict(modelSVR, test)
+
+summary(test$SalePrice)
+summary(predictSVR)
+
+RMSE(test$SalePrice, predictSVR)
 ```
 
-## Random Forest
+## Regression Trees
 
-Random Forest is an algorithm that uses many decision trees and makes predictions based on the average predicted values resulting from each component tree. This is intended to result in better accuracy than using a single tree.
+Decision trees attempt to classify an observation in the form of a target variable based on a set of input variables. They take the form of a directed graph where each interior node corresponds to a decision made on the basis of an input variable. A regression tree is a decision tree whose target variable is continuously variable, as is the case here. The training algorithm used by the library shown below uses recursive partitioning with an exit condition based on the target observation in the training set; the decision tree can then be used with a test dataset to produce predictions.
+
+```{r}
+modelRT <- rpart(SalePrice ~ LotArea + TotalBsmtSF + GrLivArea +
+  TotRmsAbvGrd + Fireplaces + GarageArea + newBathrooms, data = train, method = "anova")
+summary(modelRT)
+predictRT <- predict(modelRT, test)
+
+summary(test$SalePrice)
+summary(predictRT)
+
+RMSE(test$SalePrice, predictRT)
+```
+
+## Random Forests
+
+The Random Forest algorithm is a development of those used to build regression trees that are able to correct for overfitting to the training set by constructing a large number of decision trees during training and producing an average of individual trees.
+
+Parameters for the for this random forest model were copied from similar descriptions of kernels found at Kaggle that used the same library\footnote{e.g. see \url{https://www.kaggle.com/myonin/prediction-of-house-prices-3-methods}}.
+
+```{r}
+modelRF <- randomForest(SalePrice ~ LotArea + TotalBsmtSF + GrLivArea +
+  TotRmsAbvGrd + Fireplaces + GarageArea + newBathrooms, data = train, method = "anova",
+  ntree = 300, replace = FALSE, nodesize = 1, importance = TRUE)
+summary(modelRF)
+predictRF <- predict(modelRF, test)
+
+summary(test$SalePrice)
+summary(predictRF)
+
+RMSE(test$SalePrice, predictRF)
+```
+
+## Gradiant Boosting Regression
+
+Gradiant boosting machines are yet more examples of algorithms based on an ensemble of individually-weaker decision trees, generalising their output by the optimisation of a differentiable loss function.
+
+Parameters for the for this GBM model were copied from similar descriptions of kernels found at Kaggle that used the same library\footnote{e.g. see \url{https://www.kaggle.com/myonin/prediction-of-house-prices-3-methods}}.
+
+```{r}
+modelGBM <- gbm(SalePrice ~ LotArea + TotalBsmtSF + GrLivArea +
+  TotRmsAbvGrd + Fireplaces + GarageArea + newBathrooms, data = train,
+  distribution = "laplace", shrinkage = 0.05, interaction.depth = 5,
+  bag.fraction = 0.66, n.minobsinnode = 1, cv.folds = 100, keep.data = FALSE,
+  verbose = FALSE, n.trees = 300)
+summary(modelGBM)
+predictGBM <- predict(modelGBM, test, n.trees = 300)
+
+summary(test$SalePrice)
+summary(predictGBM)
+
+RMSE(test$SalePrice, predictGBM)
+```
+
+\newpage
 
 # Accuracy Comparison
 
-Hold-out or cross-validation
+The source dataset used in this assignment was split arbitrarily into a training set (`train`) and a validation set (`test`) of first-seen data. Each of the models used were trained using the former and cross-validated using the latter, in effect testing the model against data that was not used in estimating it. The accuracy of the model was quantified as the root mean squared error between target variables in the validation set and the corresponding predicted values generated by each of the models.
 
+Regression Model          | RMSE
+------------------------- | ---------
+Random Forests            | 0.1678204
+Gradiant Boosting Machine | 0.1692927
+Multivariate Regression   | 0.1789892
+Support Vector Regression | 0.1980624
+Regression Trees          | 0.2230123
+
+No attempt was made to tune most of the models, with the notable exception of the two that gave the lowest RMSE which were tuned using parameters used by a Kaggle competitor working on the same dataset (albeit a dataset that was likely transformed differently, and probably not reduced with such viciousness). It seems entirely plausible that other models would see lower RMSE than that observed if some effort was made to tune them.
