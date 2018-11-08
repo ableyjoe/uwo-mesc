@@ -1,6 +1,6 @@
 ---
 title: "ECE-9603A Assignment 2: Neural Networks"
-author: "Joe Abley -- jabley@uwo.ca"
+author: "Joe Abley -- jabley@uwo.ca \\ 2018-11-07"
 output:
   pdf_document:
     toc: true
@@ -28,11 +28,13 @@ This assignment will follow a similar process using multi-layer neural networks.
 
 # Data Preparation
 
+## Review of Features Isolated in Assignment 1
+
 The input variables carried over from assignment 1 were as follows:
 
 Input Variable  | Description
 --------------  | ----------------
-`newBathrooms`  | Total number of bathrooms of all kinds
+`newBathrooms`  | Total number of bathrooms of all kinds (derived)
 `LotArea`       | Lot size in square feet
 `TotalBsmtSF`   | Total square feet of basement area
 `GrLivArea`     | Above grade (ground) living area square feet
@@ -41,6 +43,8 @@ Input Variable  | Description
 `GarageArea`    | Size of garage in square feet
 
 The data set includes 1460 observations, each with an output variable `SalePrice`. From this source data we extract 60% of observations into a training set (876), 20% into a cross-validation set (292) and the last 20% into a test set (292).
+
+## Normalisation
 
 As might be expected, each of the input variables (and the output variables) have dramatically different scales due to the units they represent, ranging from sale price dollar values in the hundreds of thousands to the number of bathrooms which are small integers. Each of these input variables $x$ is normalised using min-max scaling to a fixed range $0 \leq x_{norm} \leq 1$ using
 
@@ -51,8 +55,6 @@ $\displaystyle x_{norm} = \frac{x - x_{min}}{x_{max} - x_{min}}$
 No other transformations of input variables is carried out.
 
 ```{r echo = FALSE, results = 'hide', message = FALSE}
-# packages
-
 # import data
 sourceData <- read.csv("train.csv")
 
@@ -83,7 +85,11 @@ Since the problem at hand does not involve classification or feature extraction,
 
 A feedforward neural network, although simple, seems like a plausible basis to construct a forecasting model. We know from simple observation and experimentation with data transforms in assignment 1 that at least two of the variables in the observation set may well be non-linear, and hence we will build multi-layer networks of varying depths and attempt to use the cross-validation data set to identify the best network topology without overfitting. The best model identified using that methodology will then be tested against the test set.
 
-### Network Topology
+## Parameters
+
+Networks are constructed using the default activation functions and learning algorithms provided by the \emph{neuralnet} library in R.
+
+## Network Topology
 
 The network topology will include an input layer with seven nodes, corresponding to the seven normalised input variables in the data set, and an output layer with one node, corresponding to the normalised output variable `SalePrice`. We will add some number of hidden layers each containing some number of neurons, and we expect some of these topologies to yield better results than others.
 
@@ -110,11 +116,11 @@ The following  graphs show the mean root mean square error (measured against act
 ```{r echo = FALSE, results = 'hide', message = FALSE}
 library(neuralnet)
 
-# create a neural network with h hidden layers, train 
+# create a neural network with h hidden layers of n neurons, train, cross-validate
 measured_rmse <- function(h, n) {
   net = neuralnet(SalePrice ~ LotArea + TotalBsmtSF + GrLivArea + TotRmsAbvGrd + Fireplaces + GarageArea + newBathrooms, train, hidden = rep(n, h))
   prediction = compute(net, validation[, c("LotArea", "TotalBsmtSF", "GrLivArea", "TotRmsAbvGrd", "Fireplaces", "GarageArea", "newBathrooms")])
-  rmse = sqrt(mean((validation$SalePrice - prediction$net.result)^2))
+  rmse <- sqrt(mean((validation$SalePrice - prediction$net.result)^2))
   return(rmse)
 }
 
