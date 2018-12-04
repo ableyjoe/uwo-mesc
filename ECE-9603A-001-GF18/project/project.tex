@@ -1,0 +1,323 @@
+\documentclass[conference]{IEEEtran}
+% This is stripped down to basically the ieee bare_conf.tex header
+\usepackage{amssymb,amsmath}
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage{hyperref}
+\PassOptionsToPackage{usenames,dvipsnames}{color} % color is loaded by hyperref
+\hypersetup{unicode=true,
+            pdftitle={Identifying the True Origin of DNS Traffic Without Reference to Client Source Address},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+% -- biblio. set natbib: true in pandoc for silly hacks around pandoc \cite{} vs \citep{}
+\usepackage{cite}
+\bibliographystyle{IEEEtran}
+\let\citep\cite
+% if you want the [2, 3] vs IEEE [2], [3]
+\renewcommand{\citepunct}{,\penalty\citepunctpenalty\ }
+
+\title{Identifying the True Origin of DNS Traffic Without Reference to Client
+Source Address}
+% author names and affiliations
+% use a multiple column layout for up to three different
+% affiliations
+\author{\IEEEauthorblockN{Joe Abley}\IEEEauthorblockA{Western University, London, Ontario, Canada \\ Afilias Canada, Toronto, Ontario, Canada \\ \href{mailto:jabley@uwo.ca}{\nolinkurl{jabley@uwo.ca}},
+\href{mailto:jabley@afilias.info}{\nolinkurl{jabley@afilias.info}}}}
+
+
+
+
+
+\date{2018-12-04 00:56:42 -0500}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\let\tightlist\relax % silly pandoc thing
+
+% --- user includes
+\makeatletter
+\@ifpackageloaded{subfig}{}{\usepackage{subfig}}
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\captionsetup[subfloat]{margin=0.5em}
+\AtBeginDocument{%
+\renewcommand*\figurename{Figure}
+\renewcommand*\tablename{Table}
+}
+\AtBeginDocument{%
+\renewcommand*\listfigurename{List of Figures}
+\renewcommand*\listtablename{List of Tables}
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+
+\begin{document}
+\maketitle
+\begin{abstract}
+We demonstrate a classifier system that is able to identify the
+originating system respobsible for stateless Domain Name System (DNS)
+traffic received at an authoritative DNS server without reference to
+source address. The ability to determine whether particular DNS query
+traffic received at an authoritative server is legitimately sourced from
+a particular client system is useful in identifying some classes of
+malicious traffic in production DNS systems.
+\end{abstract}
+
+\section{Introduction}\label{sec:introduction}
+
+\label{sec:introduction}
+
+The Domain Name System (DNS) includes a wire protocol with which
+structured requests and responses are exchanged over a network. The DNS
+protocol was originally specified \citep{rfc1034}\citep{rfc1035} for use
+over both the Transmission Control Protocol (TCP) \citep{rfc793} and the
+User Datagram Protocol (UDP) \citep{rfc768} and the use of other
+transports have also been documented
+\citep{rfc7858}\citep{rfc8484}\citep{huitema-quic-dnsoquic-05}. At
+present, however, UDP is the overwhelmingly dominant transport protocol
+in use; for example, according to statistics published by ICANN for
+queries received at the L root server, UDP accounts for 98\% of all
+queries
+received\footnote{\url{http://stats.dns.icann.org/plotcache/L-Root/transport_vs_qtype/2018-12-03T00:00-2018-12-03T23:59-all.html}}.
+
+Since UDP transport for DNS is stateless, consisting of single-datagram
+queries and responses with no setup or tear-down handshake, there are
+limited opportunities to verify the legitimacy of a source address. DNS
+servers are consequently frequently used as amplifiers in reflection
+attacks \citep{rfc5358}. Although some such attacks are trivially
+identified, e.g.~by Query Type (QTYPE), many are more difficult. By
+choosing query parameters that match legitimate, real-world use of the
+DNS, attackers can make it difficult for their traffic to be identified
+and blocked without causing collateral damage. This is especially true
+of amplification attacks against DNS resolvers.
+
+The clients of authoritative DNS servers are most usually DNS resolvers.
+These client systems receive requests from end-user applications (or
+downstream resolvers). Different client resolver systems are observed to
+send different mixes of DNS traffic; for example, a resolver system that
+mainly serves end-users will send a different mixture of queries to
+authoritative servers than one which serves a specific application like
+Internet mail \citep{rfc5321}, which might reasonably be expected to
+have a much higher proportion of query traffic with \texttt{QTYPE=MX}.
+
+Afilias Canada\footnote{\url{https://afilias.info/}} operates
+authoritative DNS infrastructure for around 300 top-level domains,
+including several that attract high levels of query traffic such as INFO
+and ORG. This infrastructure is distributed globally using anycast
+service distribution \citep{rfc4786}, using commodity transit services,
+public peering and so-called Private Network Interconnects (PNIs). The
+real origin of queries received over a PNI can be known with high
+accuracy; the origin of queries received over the Internet, in contrast,
+cannot. We refer to the former as \emph{trusted} paths, and the latter
+as \emph{untrusted}. Trusted paths exist to Google Public
+DNS\footnote{\url{https://dns.google.com}}, a public DNS resolver system
+configured for use by a large number of end-users, and
+Facebook\footnote{\url{https://www.facebook.com}}, whose resolver
+systems are mainly used by back-end systems that build previews for
+links shared between users of Facebook's social media platform. The
+traffic patterns of each are expected to be usefully different.
+
+While real-time anomoly detection in DNS traffic remains an elusive
+problem, the ability to classify traffic apparently received by
+particular sources as being legitimate is useful in the forensic
+analysis of traffic spikes since it provides the opportunity to
+distinguish between illegitimate, unwanted traffic and traffic from
+clients that just happen to be busy, e.g.~due to a burst in popularity
+in a particular web page, or changes in the Time To Live (TTL)
+parameters of high-use domain names. This paper describes a system that
+aims to provide such a classification.
+
+A raw DNS dataset is collected in the form of individual (request,
+response) DNS messages received and sent from and to a single apparent
+source over a time period. We extract features from those messages and
+count them over a short time interval to build a vector of features that
+describes the traffic during that time. Each such vector, once
+normalised, represents a single observation. Sets of observations can be
+collected from adjacent sample intervals. Where the traffic arrived from
+a trusted source, the source system can be identified and included in
+the dataset which can subsequently be used for training. Traffic that
+definitively did not arrive from a trusted source can be used to
+classify traffic as ``other''. The resulting model can be used to
+classify query streams from unknown sources to classify the origin of
+the query traffic as ``Facebook'', ``Google'' or ``Other''.
+
+This paper is organised as follows. Section \ref{sec:introduction}
+introduces the problem and provides some high-level background on the
+DNS. Section \ref{sec:background} provides a short introduction to the
+algorithms and accuracy measures that are used to build the model. Some
+other work on applying machine learning techniques to problems in the
+DNS are described in section \ref{sec:related}. Data collection and
+preprocessing, feature engineering and choice of learning and validation
+algorithms are discussed in section \ref{sec:methodology}. Section
+\ref{sec:evaluation} describes the evaluation of the resulting model;
+section \ref{sec:conclusion} provides a summary.
+
+\section{Background}\label{sec:background}
+
+\label{sec:background}
+
+Two multiclass classifiers are evaluated for this model in section
+\ref{sec:classifiers}, below. The accuracy of each is assessed as
+described in section \ref{sec:accuracy}.
+
+\subsection{Classifier Methods}\label{sec:classifier-methods}
+
+\label{sec:classifiers}
+
+\subsubsection{Multiclass Support Vector
+Machine}\label{sec:multiclass-support-vector-machine}
+
+The classifier used in this paper was constructed as a series of Support
+Vector Machines (SVM), each used as a binary classifier. SVM represents
+\(n\)-dimensional support vectors in an \(n\)-axis hyperspace and
+identifies a hyperplane boundary between observations known to be in
+different categories to facilitate classification of unlabelled test
+sets. Those boundaries can then be used to classify unlabelled
+observations.
+
+Multiclass classification is achieved using \(k(k-1)/2\)
+\emph{one-against-one} binary classifiers combined with a max-wins
+voting scheme, as discussed in \citep{10.1007/11494683_28}.
+
+The SVM implementation used to construct this model exposes several
+hyperparameters that can be tuned, as well as a native grid search to
+assist identification of optimal parameters for a supplied validation
+dataset.
+
+\subsubsection{Random Forest}\label{sec:random-forest}
+
+Random Forests (RF) \citep{Breiman2001} combine many decision trees at
+training time into an ensemble learning model. RF is an improvement over
+the use of individual decision trees since they are far less susceptible
+to over-fitting; in fact, Breiman asserts that RF in general does not
+over-fit, although it is not clear that the assertion is supported by
+widely-accepted analysis in the general case.
+
+The RF implementation used to construct this model exposes several
+parameters that can be tuned, including the maximum tree depth, the
+maximum number of nodes and the bootstrap sample size.
+
+\subsection{Accuracy}\label{sec:accuracy}
+
+Short introduction to the algorithms and the accuracy measures used.
+Generic only, and nothing about how the algorithms were used or the
+data. Half page, max one page.
+
+\section{Related Work}\label{sec:related-work}
+
+\label{sec:related}
+
+Machine learning techniques were applied to the problem of classifying
+so-called core domains as part of a threat assessment in a production
+system at
+Nominet\footnote{Nominet was acquired by Akamai in November 2017}
+\citep{Yuzifovichbotconf2017} \citep{YuzifovichOARC2017}. This problem
+has some similarities to the problem described in this paper, and
+illustrates the use of continuous learning to upadate an already-trained
+model on arrival of new data.
+
+The .NZ registry maintains a set of business intelligence datasets which
+are constructed in part by analysis of queries received at authoritative
+DNS servers. In order to improve the accuracy of those datasets, machine
+learning techniques were used to build models that could classify query
+sources as DNS resolvers or other systems (e.g.~systems performing
+active monitoring of the DNS). The work included extensive feature
+analysis and incorporated substantial domain knowledge derived from
+earlier analysis. \citep{Qiao2018} \citep{QiaoOARC2018}.
+
+A study in the application of different machine learning techniques was
+presented in \citep{Sammour2017} as part of an attempt to train a model
+to identify Internet traffic tunnelled over the DNS protocol.
+
+The approach described in this paper differs from other approaches
+described above in that it acknowledges the problems inherent in
+grouping DNS transactions together without the ability to be certain
+that the apparent sources of DNS queries are legitimate.
+
+\section{Methodology}\label{sec:methodology}
+
+\label{sec:methodology}
+
+\subsection{Overview}\label{sec:overview}
+
+Complete sets of query data received over both trusted and untrusted
+paths were collected at a representative number of Afilias anycast
+sites, in the form of packet captures in PCAP
+format.\footnote{PCAP, named after the C library \texttt{libpcap}, is the file format used by the \texttt{tcpdump} utility.}
+
+\subsection{Data Collection and
+Preprocessing}\label{sec:data-collection-and-preprocessing}
+
+\begin{itemize}
+\tightlist
+\item
+  remove non-UDP traffic
+\item
+  isolate collections of queries and responses that correspond to a
+  single trusted or untrusted source address
+\item
+  count parameters in individual queries and responses within regular
+  sample intervals
+\item
+  normalise counts in each sample
+\end{itemize}
+
+\subsection{Feature Engineering}\label{sec:feature-engineering}
+
+\subsection{Validation Process}\label{sec:validation-process}
+
+Validation process (hold-out, k-fold, \ldots{})
+
+No results
+
+No code
+
+Formulas can be included as long as they are not specific to a
+particular programming language.
+
+\section{Evaluation}\label{sec:evaluation}
+
+\label{sec:evaluation}
+
+Results of the process I applied
+
+Can include a paragraph describing what languages, packages and
+libraries were used.
+
+Possibilities: accuracy measures, graphs showing tuning process, tables
+and graphs comparing different approaches, tuned parameter ranges and
+selected values.
+
+No code.
+
+\section{Conclusion}\label{sec:conclusion}
+
+\label{sec:conclusion}
+
+Short summary of the paper/report
+
+Should include problem description, how I solved it and the main
+results.
+
+\section{Colophon}\label{sec:colophon}
+
+This document has been written in R
+Markdown\footnote{\url{https://rmarkdown.rstudio.com}}; the code used to
+produce the output included in this document is consequently included
+with the document
+source\footnote{\url{https://github.com/ableyjoe/uwo-mesc/tree/master/ECE-9603A-001-GF18/project}}.
+The production of this document in IEEEtran style from R Markdown was
+informed by a pseudonomymously-attributed community
+project\footnote{\url{https://github.com/mathematicalcoffee/IEEEtran-rmarkdown}}.
+
+\bibliography{IEEEabrv,./project}
+
+\end{document}
