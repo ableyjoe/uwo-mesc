@@ -72,12 +72,12 @@ While real-time anomoly detection in DNS traffic remains an elusive problem, the
 
 A raw DNS dataset is collected in the form of individual (request, response) DNS messages received and sent from and to a single apparent source over a time period. We extract features from those messages and count them over a short time interval to build a vector of features that describes the traffic during that time. Each such vector, once normalised, represents a single observation. Sets of observations can be collected from adjacent sample intervals. Where the traffic arrived from a trusted source, the source system can be identified and included in the dataset which can subsequently be used for training. Traffic that definitively did not arrive from a trusted source can be used to classify traffic as "other". The resulting model can be used to classify query streams from unknown sources to classify the origin of the query traffic as "Facebook", "Google" or "Other".
 
-This paper is organised as follows. Section \ref{sec:introduction} introduces the problem and provides some high-level background on the DNS. Section \ref{sec:background} provides a short introduction to the algorithms and accuracy measures that are used to build the model. Some other work on applying machine learning techniques to problems in the DNS are described in section \ref{sec:related}. Data collection and preprocessing, feature engineering and choice of learning and validation algorithms are discussed in section \ref{sec:methodology}. Section \ref{sec:evaluation} describes the evaluation of the resulting model; section \ref{sec:conclusion} provides a summary.
+This paper is organised as follows. Section \ref{sec:introduction} introduces the problem and provides some high-level background on the DNS. Section \ref{sec:background} provides a short introduction to the algorithms and accuracy measures that are used to build the model. Some other work on applying machine learning techniques to problems in the DNS are described in section \ref{sec:related}. Data collection and preprocessing, feature engineering and choice of learning and validation algorithms are discussed in section \ref{sec:methodology}. Section \ref{sec:evaluation} describes the evaluation of the resulting model. Section \ref{sec:conclusion} provides a summary of the work described in this paper, and section \ref{sec:future} identifies some areas for future study.
 
 # Background
 \label{sec:background}
 
-Two multiclass classifiers are evaluated for this model in section \ref{sec:classifiers}, below. The accuracy of each is assessed as described in section \ref{sec:accuracy}.
+Two multiclass classifiers are evaluated for this model in section \ref{sec:classifiers}, below. The approach used to evaluate the accuracy of each is described in section \ref{sec:accuracy}.
 
 ## Classifier Methods
 \label{sec:classifiers}
@@ -92,7 +92,7 @@ The SVM implementation used to construct this model exposes several hyperparamet
 
 ### Random Forest
 
-Random Forests (RF) [@Breiman2001] combine many decision trees at training time into an ensemble learning model. RF is an improvement over the use of individual decision trees since they are far less susceptible to over-fitting; in fact, Breiman asserts that RF in general does not over-fit, although it is not clear that the assertion is supported by widely-accepted analysis in the general case.
+Random Forests (RF) [@Breiman2001] combine many decision trees at training time into an ensemble learning model. RF is an improvement over the use of individual decision trees since they are far less susceptible to over-fitting; in fact, Breiman asserts that RF in the general case does not over-fit.
 
 The RF implementation used to construct this model exposes several parameters that can be tuned, including the maximum tree depth, the maximum number of nodes and the bootstrap sample size.
 
@@ -103,7 +103,7 @@ Short introduction to the algorithms  and the accuracy measures used. Generic on
 # Related Work
 \label{sec:related}
 
-Machine learning techniques were applied to the problem of classifying so-called core domains as part of a threat assessment in a production system at Nominet\footnote{Nominet was acquired by Akamai in November 2017} [@Yuzifovichbotconf2017] [@YuzifovichOARC2017]. This problem has some similarities to the problem described in this paper, and illustrates the use of continuous learning to upadate an already-trained model on arrival of new data.
+Machine learning techniques were applied to the problem of classifying so-called core domains as part of a threat assessment in a production system at Nominum\footnote{Nominum was acquired by Akamai in November 2017} [@Yuzifovichbotconf2017] [@YuzifovichOARC2017]. This problem has some similarities to the problem described in this paper, and illustrates the use of continuous learning to upadate an already-trained model on arrival of new data.
 
 The .NZ registry maintains a set of business intelligence datasets which are constructed in part by analysis of  queries received at authoritative DNS servers. In order to improve the accuracy of those datasets, machine learning techniques were used to build models that could classify query sources as DNS resolvers or other systems (e.g. systems performing active monitoring of the DNS). The work included extensive feature analysis and incorporated substantial domain knowledge derived from earlier analysis. [@Qiao2018] [@QiaoOARC2018].
 
@@ -152,6 +152,14 @@ No code.
 Short summary of the paper/report
 
 Should include problem description, how I solved it and the main results.
+
+# Future Study
+\label{sec:future}
+
+ * different algorithms
+ * incorporate new classes (new trusted paths to resolvers)
+ * string-similarity metrics for QNAMEs
+ * quantitative measurements of query entropy
 
 # Colophon
 

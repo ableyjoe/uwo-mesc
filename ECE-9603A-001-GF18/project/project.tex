@@ -34,7 +34,7 @@ Source Address}
 
 
 
-\date{2018-12-04 00:56:42 -0500}
+\date{2018-12-04 01:12:26 -0500}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt plus 2pt minus 1pt}
 \let\tightlist\relax % silly pandoc thing
@@ -157,16 +157,18 @@ other work on applying machine learning techniques to problems in the
 DNS are described in section \ref{sec:related}. Data collection and
 preprocessing, feature engineering and choice of learning and validation
 algorithms are discussed in section \ref{sec:methodology}. Section
-\ref{sec:evaluation} describes the evaluation of the resulting model;
-section \ref{sec:conclusion} provides a summary.
+\ref{sec:evaluation} describes the evaluation of the resulting model.
+Section \ref{sec:conclusion} provides a summary of the work described in
+this paper, and section \ref{sec:future} identifies some areas for
+future study.
 
 \section{Background}\label{sec:background}
 
 \label{sec:background}
 
 Two multiclass classifiers are evaluated for this model in section
-\ref{sec:classifiers}, below. The accuracy of each is assessed as
-described in section \ref{sec:accuracy}.
+\ref{sec:classifiers}, below. The approach used to evaluate the accuracy
+of each is described in section \ref{sec:accuracy}.
 
 \subsection{Classifier Methods}\label{sec:classifier-methods}
 
@@ -197,9 +199,8 @@ dataset.
 Random Forests (RF) \citep{Breiman2001} combine many decision trees at
 training time into an ensemble learning model. RF is an improvement over
 the use of individual decision trees since they are far less susceptible
-to over-fitting; in fact, Breiman asserts that RF in general does not
-over-fit, although it is not clear that the assertion is supported by
-widely-accepted analysis in the general case.
+to over-fitting; in fact, Breiman asserts that RF in the general case
+does not over-fit.
 
 The RF implementation used to construct this model exposes several
 parameters that can be tuned, including the maximum tree depth, the
@@ -218,7 +219,7 @@ data. Half page, max one page.
 Machine learning techniques were applied to the problem of classifying
 so-called core domains as part of a threat assessment in a production
 system at
-Nominet\footnote{Nominet was acquired by Akamai in November 2017}
+Nominum\footnote{Nominum was acquired by Akamai in November 2017}
 \citep{Yuzifovichbotconf2017} \citep{YuzifovichOARC2017}. This problem
 has some similarities to the problem described in this paper, and
 illustrates the use of continuous learning to upadate an already-trained
@@ -306,6 +307,22 @@ Short summary of the paper/report
 
 Should include problem description, how I solved it and the main
 results.
+
+\section{Future Study}\label{sec:future-study}
+
+\label{sec:future}
+
+\begin{itemize}
+\tightlist
+\item
+  different algorithms
+\item
+  incorporate new classes (new trusted paths to resolvers)
+\item
+  string-similarity metrics for QNAMEs
+\item
+  quantitative measurements of query entropy
+\end{itemize}
 
 \section{Colophon}\label{sec:colophon}
 
