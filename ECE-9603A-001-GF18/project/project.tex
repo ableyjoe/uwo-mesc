@@ -34,41 +34,43 @@ Source Address}
 
 
 
-\date{2018-12-04 01:12:26 -0500}
+\date{2018-12-05 22:37:08 -0500}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt plus 2pt minus 1pt}
 \let\tightlist\relax % silly pandoc thing
 
 % --- user includes
-\makeatletter
-\@ifpackageloaded{subfig}{}{\usepackage{subfig}}
-\@ifpackageloaded{caption}{}{\usepackage{caption}}
-\captionsetup[subfloat]{margin=0.5em}
-\AtBeginDocument{%
-\renewcommand*\figurename{Figure}
-\renewcommand*\tablename{Table}
-}
-\AtBeginDocument{%
-\renewcommand*\listfigurename{List of Figures}
-\renewcommand*\listtablename{List of Tables}
-}
-\@ifpackageloaded{float}{}{\usepackage{float}}
-\floatstyle{ruled}
-\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
-\floatname{codelisting}{Listing}
-\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
-\makeatother
+% Put your preamble here. Example.
+% subfigures
+\usepackage{subfig}
+% dots in filenames
+\usepackage{graphicx, grffile}
+% bold math
+\usepackage{bm}
+% colours
+\usepackage[usenames,dvipsnames]{xcolor}
+% suppress month in bibliography
+%\AtEveryBibitem{\clearfield{month}}
+%\AtEveryCitekey{\clearfield{month}}
+
+% texdef -t latex -f {cmdname} to see if cmd is already defined
+
+% Letters in fancy font (expectation, integers, reals, normal dist)
+\newcommand{\E}[1]{\operatorname{\mathbb{E}}{\left[#1\right]}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathcal{N}}
 
 \begin{document}
 \maketitle
 \begin{abstract}
-We demonstrate a classifier system that is able to identify the
-originating system respobsible for stateless Domain Name System (DNS)
-traffic received at an authoritative DNS server without reference to
-source address. The ability to determine whether particular DNS query
-traffic received at an authoritative server is legitimately sourced from
-a particular client system is useful in identifying some classes of
-malicious traffic in production DNS systems.
+We demonstrate a model that is able to classify the originating system
+respobsible for stateless Domain Name System (DNS) traffic received at
+an authoritative DNS server without reference to source address. The
+ability to determine whether particular DNS query traffic received at an
+authoritative server is legitimately sourced from a particular client
+system is useful in identifying various classes of malicious traffic in
+production DNS systems.
 \end{abstract}
 
 \section{Introduction}\label{sec:introduction}
@@ -136,18 +138,21 @@ parameters of high-use domain names. This paper describes a system that
 aims to provide such a classification.
 
 A raw DNS dataset is collected in the form of individual (request,
-response) DNS messages received and sent from and to a single apparent
-source over a time period. We extract features from those messages and
-count them over a short time interval to build a vector of features that
-describes the traffic during that time. Each such vector, once
-normalised, represents a single observation. Sets of observations can be
-collected from adjacent sample intervals. Where the traffic arrived from
-a trusted source, the source system can be identified and included in
-the dataset which can subsequently be used for training. Traffic that
-definitively did not arrive from a trusted source can be used to
-classify traffic as ``other''. The resulting model can be used to
-classify query streams from unknown sources to classify the origin of
-the query traffic as ``Facebook'', ``Google'' or ``Other''.
+response) DNS messages received from and sent to a single apparent
+source over period of two weeks. We split the resulting query stream
+into five minute intervals and from each we extract a vector of
+variables that describes the traffic received from each client during
+that time. Each such vector, once normalised, represents a single
+observation related to a single client. Observations that correspond to
+traffic received from trusted sources can be used as a training dataset.
+Observations corresponding to DNS traffic that definitively did not
+arrive from a trusted source can also be incorporated as ``other''. The
+resulting model can be used to classify five-minute samples of query
+streams from purported single sources to classify the origin of the
+query traffic as ``Facebook'', ``Google'' or ``Other''. Since query
+sources for each category feature in an equal number of traffic samples,
+it is straightforward to produce a training dataset that is balanced
+across the three categories.
 
 This paper is organised as follows. Section \ref{sec:introduction}
 introduces the problem and provides some high-level background on the
@@ -168,14 +173,24 @@ future study.
 
 Two multiclass classifiers are evaluated for this model in section
 \ref{sec:classifiers}, below. The approach used to evaluate the accuracy
-of each is described in section \ref{sec:accuracy}.
+of each is described in section \ref{sec:accuracy}. These models are
+used to classify features of individual five-minute samples of DNS
+reponse data according to source system by treating each sample as a
+single observation. A brief discussion of other approaches that might
+usefully consider each sample as a point along a time series can be
+found in section \ref{sec:future}.
 
-\subsection{Classifier Methods}\label{sec:classifier-methods}
+\subsection{Classifier Models}\label{sec:classifier-models}
 
 \label{sec:classifiers}
 
+We consider both Support Vector Machine and Random Forest models and
+select the most successful one based on 10-fold validation.
+
 \subsubsection{Multiclass Support Vector
 Machine}\label{sec:multiclass-support-vector-machine}
+
+\label{sec:svmmethod}
 
 The classifier used in this paper was constructed as a series of Support
 Vector Machines (SVM), each used as a binary classifier. SVM represents
@@ -196,21 +211,60 @@ dataset.
 
 \subsubsection{Random Forest}\label{sec:random-forest}
 
+\label{sec:rfmethod}
+
 Random Forests (RF) \citep{Breiman2001} combine many decision trees at
-training time into an ensemble learning model. RF is an improvement over
-the use of individual decision trees since they are far less susceptible
-to over-fitting; in fact, Breiman asserts that RF in the general case
-does not over-fit.
+training time into an ensemble learning model. RF uses bootstrap samples
+to introduce a random component into the tree-building process, whilst
+also reducing correlation amongst trees, adding noise to perturb the
+tree structure and using a random subset of available predictors each
+each split. Each of \(m\) models in the resulting ensemble is used to
+generate a prediction for a new sample and those predictions are
+averaged to give the prediction from the entire forest.
 
-The RF implementation used to construct this model exposes several
-parameters that can be tuned, including the maximum tree depth, the
-maximum number of nodes and the bootstrap sample size.
+The tuning parameters for the RF ensemble model are:
 
-\subsection{Accuracy}\label{sec:accuracy}
+\begin{itemize}
+\tightlist
+\item
+  the size of the subset of predictors randomly selected at each split,
+  \(m_try\). Breiman suggests setting \(m_try\) to be one third of the
+  number of predictors.
+\item
+  the number of trees in the forest. Breiman has proved that random
+  forests are immune from overfitting, but the accuracy
+  benefit:computational cost is expected to decrease as the forest
+  becomes larger.
+\end{itemize}
 
-Short introduction to the algorithms and the accuracy measures used.
-Generic only, and nothing about how the algorithms were used or the
-data. Half page, max one page.
+\subsection{Accuracy Measures}\label{sec:accuracy-measures}
+
+We calculate a confusion matrix over a test dataset:
+
+\begin{center}\includegraphics[width=0.5\linewidth]{confusion_matrix} \end{center}
+
+Since we intend to ensure that we have a balanced dataset between the
+three classifications of traffic samples, we are able to use a
+straightforward measure of accuracy, A:
+
+\[A = \frac{TP + TN}{TP + FP + TN + FN}\]
+
+Without a particular application for the models, it is difficult to
+assess the relative importance of false positives or false negatives in
+our model. However, as a kindness to a reader with a business case in
+mind, we calculate the precision, P, the recall, R and the specificity,
+S:
+
+\[P = \frac{TP}{TP + FP}\]
+
+\[R = \frac{TP}{TP + FN}\]
+
+\[S = \frac{TN}{TN + FP}\]
+
+As is conventional, we also calculate the F1 score, F, as the harmonic
+mean of the precision and recall metrics:
+
+\[F = \frac{2PR}{P + R}\]
 
 \section{Related Work}\label{sec:related-work}
 
@@ -249,40 +303,153 @@ that the apparent sources of DNS queries are legitimate.
 
 \subsection{Overview}\label{sec:overview}
 
-Complete sets of query data received over both trusted and untrusted
-paths were collected at a representative number of Afilias anycast
-sites, in the form of packet captures in PCAP
-format.\footnote{PCAP, named after the C library \texttt{libpcap}, is the file format used by the \texttt{tcpdump} utility.}
+\label{sec:methodology_overview} A complete set of DNS query data
+received with UDP transport over trusted and untrusted paths at a major
+anycast site in Ashburn, VA, USA was collected. This source data is
+based on raw packet captures in PCAP
+format\footnote{PCAP, named after the C library \texttt{libpcap}, is the file format used by the \texttt{tcpdump} utility},
+post-processed into \emph{dnscount} objects to extract various
+parameters from the raw DNS messages: a timestamp; client and server
+adresses (IPv4 and IPv6); the query type; query name; transport
+protocol; response code and DNS message flags. Separate \emph{dnscount}
+objects are stored for queries and responses; the query objects differ
+slightly in composition since they naturally do not include a response
+code.
 
-\subsection{Data Collection and
-Preprocessing}\label{sec:data-collection-and-preprocessing}
+The \emph{dnscount} objects are centralised using
+Redis\footnote{\url{https://redis.io/}} message brokers for integration
+in other Afilias traffic measurement systems. Since the response objects
+contain a superset of the information contained within the query objects
+(they include a response code), and since they represent the results of
+queries that are known to be well-formed to the extent that a nameserver
+can produce a response, only the response objects for a sample period
+were extracted for use in training this model. The production Redis
+message brokers were not used since doing so would involve a release
+engineering process which would introduce unnecessary cost and delay to
+the collection process.
+
+\subsection{Data Reduction}\label{sec:data-reduction}
+
+Query summaries at just this site represent around 500GB of data when
+compressed using bzip2\footnote{\url{http://www.bzip.org/}}, and hence
+an in-place reduction and summarisation process was undertaken:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Only data from the first two weeks in November 2018 were considered.
+  This seems intuitively like a long enough period to accommodate
+  different workday and weekend behaviour without represending an
+  unmaageable data set, although it seems intuitively true that a longer
+  sample period would result in a better model (see also section
+  \ref{sec:future});
+\item
+  Query \emph{dnscount} objects were discarded, since the corresponding
+  response objects contain a superset (see section
+  \ref{sec:methodology_overview});
+\item
+  Response objects with TCP transport were discarded, since transactions
+  over an established TCP session have authenticated endpoint addresses
+  through the TCP setup handshake;
+\item
+  Collections of the remaining objects within five-minute sample buckets
+  were used to produce a set of summary observations for each (site,
+  client, bucket), as described in section \ref{sec:datasetextraction}.
+\end{enumerate}
+
+The resulting summaries (compressed again using bzip2) occupied around
+5GB, which is a more manageable data volume for transport over a network
+to a central location. This data also contains no query names, allowing
+greater confidence that it contains no personally-identifiable
+information and hence presents no significant threat to personal
+privacy.
+
+\subsection{Data Extraction}\label{sec:data-extraction}
+
+\label{sec:datasetextraction}
+
+Individual \emph{dnscount} records were summarised in five-minute
+intervals in order to characterise the nature of DNS traffic for the
+corresponding (\emph{timestamp}, \emph{sitecode}, \emph{client}). The
+resulting observations for each contained the following variables. These
+were selected based on general domain knowledge about the DNS and about
+the nature of the end-systems that trigger DNS queries to be sent from
+Google and Facebook resolvers.
 
 \begin{itemize}
 \tightlist
 \item
-  remove non-UDP traffic
+  (\emph{timestamp}, \emph{sitecode}, \emph{client})
 \item
-  isolate collections of queries and responses that correspond to a
-  single trusted or untrusted source address
+  number of responses counted in each five-minute sample interval
 \item
-  count parameters in individual queries and responses within regular
-  sample intervals
+  length of the largest observed label in all query name
 \item
-  normalise counts in each sample
+  the mean length of all observed labels in all query names
+\item
+  the number of unique top-level labels observed in all query names
+\item
+  the number of unique second-level domains observed in all query names
+\item
+  the proportion of query names that consisted of 1, 2, 3 or 4 labels
+  (exposed as four separate variables)
+\item
+  the proportion of responses with response
+  code\footnote{\url{https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml\#dns-parameters-6}}
+  0, 1, 2, 3, 4 5, 6, 7, 8, 9 or 10 (eleven separate variables)
+\item
+  the proportion of responses with query
+  type\footnote{\url{https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml\#dns-parameters-4}}
+  1, 2, 5, 6, 15, 16, 28, 48 and 255 (eight separate variables)
 \end{itemize}
+
+Closer examination of this summary set revealed data for around two
+million clients; of those two million, 80\% of responses observed during
+the sample window were sent to just ten thousand. This is a decidedly
+asymmetric distribution with a long tail.
+
+Training and validation datasets were extracted from these summary sets
+by collecting all observations for (\emph{t}, \emph{sitecode},
+\emph{client}) \(\forall t\), \emph{sitecode} = IAD1 and each of:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \emph{client} is known to be reachable via the Google PNI (candidate
+  Google dataset);
+\item
+  \emph{client} is known to be reachable via the Facebook PNI (candidate
+  Facebook dataset);
+\item
+  \emph{client} is not reachable via any PNI (candidate ``other''
+  dataset).
+\end{enumerate}
+
+\emph{Describe the resulting datasets}
 
 \subsection{Feature Engineering}\label{sec:feature-engineering}
 
+\begin{itemize}
+\tightlist
+\item
+  derive day-of-week and hour-of-day from date field; discard month and
+  year since they would be the same for all observations
+\item
+  discard site code, since it's the same for all observations
+\end{itemize}
+
 \subsection{Validation Process}\label{sec:validation-process}
 
-Validation process (hold-out, k-fold, \ldots{})
+We validate each model described in section \ref{sec:classifiers} using
+k-fold cross-validation over the training dataset with \(k=10\). This
+provides an assessment of each model through ten folds of the source
+data, giving a better measure of validation than a single
+training/validation split.
 
-No results
-
-No code
-
-Formulas can be included as long as they are not specific to a
-particular programming language.
+The selected model is then trained over the entire training set, and
+applied to untrained data to measure its accuracy.
 
 \section{Evaluation}\label{sec:evaluation}
 
@@ -322,7 +489,36 @@ results.
   string-similarity metrics for QNAMEs
 \item
   quantitative measurements of query entropy
+\item
+  larger sample period
+\item
+  continuous learning model
+\item
+  recurrant neural networks or other models that exhibit temporal
+  dynamic behaviour for a time sequence
 \end{itemize}
+
+It is reasonable to expect that the grouping and ordering of DNS queries
+might be relevant in the classification of a query stream as originating
+from a particular DNS resolver. For example, the DNS Security Extensions
+(DNSSEC) specification\cite{rfc4033} accommodates flexibility in the
+order in which DNSSEC resource record sets are retrieved when a resolver
+with an empty cache performs validation on an answer from a signed zone;
+certain
+applications\footnote{For example, qmail sends queries with QTYPE=ANY in an attempt to accelerate the process of retrieving answers that otherwise would require separate queries with QTYPE=A, AAAA and MX. The rarity of this approach was exposed when support for ANY queries on the server side started to become constrained. See \url{https://fanf.livejournal.com/122220.html} for related commentary.}
+are also known to exhibit specific behaviour when using the DNS, and
+resolvers that serve a community of such applications might exhibit
+corresponding identifying behaviour. Particular web services use
+signature combinations of content distribution network or embedded
+advertiser beacons that might well provide a useful signature through a
+resolver, even with the significant caching potential of answers
+obtained from top-level domain authoritative nameservers.
+
+The models described in this paper treat each query stream as an
+unordered set of observations. The applicability of other models whose
+training can be influenced by the ordering of data, e.g.~those based on
+recurant multilayer perceptron networks, seem worthy of future
+investigation.
 
 \section{Colophon}\label{sec:colophon}
 
