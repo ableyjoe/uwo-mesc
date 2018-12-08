@@ -20,6 +20,7 @@
 #   out_timestamp
 #   out_sitecode
 #   out_client
+#   out_class
 #   out_responses
 #   out_max_labelsize
 #   out_mean_labelsize
@@ -30,25 +31,30 @@
 #   out_prop_3_label
 #   out_prop_4_label
 #   out_prop_rcode_0 # NOERROR
-#   out_prop_rcode_1 # FORMERR
-#   out_prop_rcode_2 # SERVFAIL
 #   out_prop_rcode_3 # NXDOMAIN
-#   out_prop_rcode_4 # NOTIMP
-#   out_prop_rocde_5 # REFUSED
-#   out_prop_rcode_6 # YXDOMAIN
-#   out_prop_rcode_7 # YXRRSET
-#   out_prop_rcode_8 # NXRRSET
-#   out_prop_rcode_9 # NOTAUTH
-#   out_prop_rcode_10 # NOTZONE
 #   out_prop_qtype_1 # A
 #   out_prop_qtype_2 # NS
 #   out_prop_qtype_5 # CNAME
 #   out_prop_qtype_6 # SOA
+#   out_prop_qtype_10 # NULL
+#   out_prop_qtype_12 # PTR
 #   out_prop_qtype_15 # MX
 #   out_prop_qtype_16 # TXT
 #   out_prop_qtype_28 # AAAA
+#   out_prop_qtype_33 # SRV
+#   out_prop_qtype_35 # NAPTR
+#   out_prop_qtype_37 # CERT
+#   out_prop_qtype_38 # A6
+#   out_prop_qtype_43 # DS
+#   out_prop_qtype_44 # SSHFP
+#   out_prop_qtype_46 # RRSIG
 #   out_prop_qtype_48 # DNSKEY
+#   out_prop_qtype_52 # TLSA
+#   out_prop_qtype_99 # SPF
 #   out_prop_qtype_255 # ANY
+#   out_prop_qtype_256 # URI
+#   out_prop_qtype_257 # CAA
+#   out_prop_qtype_32769 # DLV
 
 BEGIN {
   # require filenme variable to be set; we don't expect to be able to
@@ -73,16 +79,32 @@ BEGIN {
   in_client = $3;
   in_qtype = $4;
   in_qname = tolower($5);
-  in_rcode = $6;
-  in_flags = $7;
+  in_rcode = $7;
 
-  # discard responses to queries that arrived with RD=1
-  # (check bit 1)
-  if (int(in_flags / 2) % 2 == 1)
+  # only check clients that we care about
+  class = "";
+
+  if (in_client ~ /^(2607:f8b0:|2800:3f0:|2a00:1450:)/) {
+    class = "google";
+  }
+
+  if (in_client ~ /^(31\.13\.11[2345]\.|66\.220\.149\.|66\.220\.152\.|66\.220\/156\.|69\.63\.188\.|69\.171\.22[45]\.|69\.171\.240\.|69\.171\.251\.|173\.252\.8[456789]\.|173\.252\.12|173\.252\.243\.)/) {
+    class = "facebook";
+  }
+
+  if (in_client ~ /^(138\.246\.253\.|107\.161\.26\.|137\.236\.113\.|189\.90\.40\.|193\.106\.30\.|192\.243\.53\.)/) {
+    class = "other";
+  }
+
+  if (!class) {
     next;
+  }
 
   # remember this client
   client[in_client] = 1;
+
+  # for out_class
+  out_class[in_client] = class;
 
   # count this response
   out_responses[in_client]++;
@@ -137,58 +159,13 @@ BEGIN {
   }
 
   # for out_prop_rcode_0
-  if (in_rcode == 0) {
+  if (rcode == 0) {
     count_rcode_0[in_client]++;
   }
 
-  # for out_prop_rcode_1
-  if (in_rcode == 1) {
-    count_rcode_1[in_client]++;
-  }
-
-  # for out_prop_rcode_2
-  if (in_rcode == 2) {
-    count_rcode_2[in_client]++;
-  }
-
   # for out_prop_rcode_3
-  if (in_rcode == 3) {
+  if (rcode == 3) {
     count_rcode_3[in_client]++;
-  }
-
-  # for out_prop_rcode_4
-  if (in_rcode == 4) {
-    count_rcode_4[in_client]++;
-  }
-
-  # for out_prop_rcode_5
-  if (in_rcode == 5) {
-    count_rcode_5[in_client]++;
-  }
-
-  # for out_prop_rcode_5
-  if (in_rcode == 6) {
-    count_rcode_6[in_client]++;
-  }
-
-  # for out_prop_rcode_5
-  if (in_rcode == 7) {
-    count_rcode_7[in_client]++;
-  }
-
-  # for out_prop_rcode_5
-  if (in_rcode == 8) {
-    count_rcode_8[in_client]++;
-  }
-
-  # for out_prop_rcode_5
-  if (in_rcode == 9) {
-    count_rcode_9[in_client]++;
-  }
-
-  # for out_prop_rcode_5
-  if (in_rcode == 10) {
-    count_rcode_10[in_client]++;
   }
 
   # for out_prop_qtype_1
@@ -211,6 +188,16 @@ BEGIN {
     count_qtype_6[in_client]++;
   }
 
+  # for out_prop_qtype_10
+  if (in_qtype == 10) {
+    count_qtype_10[in_client]++;
+  }
+
+  # for out_prop_qtype_12
+  if (in_qtype == 12) {
+    count_qtype_12[in_client]++;
+  }
+
   # for out_prop_qtype_15
   if (in_qtype == 15) {
     count_qtype_15[in_client]++;
@@ -226,9 +213,54 @@ BEGIN {
     count_qtype_28[in_client]++;
   }
 
+  # for out_prop_qtype_33
+  if (in_qtype == 33) {
+    count_qtype_33[in_client]++;
+  }
+
+  # for out_prop_qtype_35
+  if (in_qtype == 35) {
+    count_qtype_35[in_client]++;
+  }
+
+  # for out_prop_qtype_37
+  if (in_qtype == 37) {
+    count_qtype_37[in_client]++;
+  }
+
+  # for out_prop_qtype_38
+  if (in_qtype == 38) {
+    count_qtype_38[in_client]++;
+  }
+
+  # for out_prop_qtype_43
+  if (in_qtype == 43) {
+    count_qtype_43[in_client]++;
+  }
+
+  # for out_prop_qtype_44
+  if (in_qtype == 44) {
+    count_qtype_44[in_client]++;
+  }
+
+  # for out_prop_qtype_46
+  if (in_qtype == 46) {
+    count_qtype_46[in_client]++;
+  }
+
   # for out_prop_qtype_48
   if (in_qtype == 48) {
     count_qtype_48[in_client]++;
+  }
+
+  # for out_prop_qtype_52
+  if (in_qtype == 52) {
+    count_qtype_52[in_client]++;
+  }
+
+  # for out_prop_qtype_99
+  if (in_qtype == 99) {
+    count_qtype_99[in_client]++;
   }
 
   # for out_prop_qtype_255
@@ -236,9 +268,19 @@ BEGIN {
     count_qtype_255[in_client]++;
   }
 
-  # for out_prop_qtype_other
-  if (in_qtype == 1) {
-    count_qtype_1[in_client]++;
+  # for out_prop_qtype_256
+  if (in_qtype == 256) {
+    count_qtype_256[in_client]++;
+  }
+
+  # for out_prop_qtype_257
+  if (in_qtype == 257) {
+    count_qtype_257[in_client]++;
+  }
+
+  # for out_prop_qtype_32769
+  if (in_qtype == 32769) {
+    count_qtype_32769[in_client]++;
   }
 }
 
@@ -251,6 +293,7 @@ END {
       out_timestamp "," \
       out_sitecode "," \
       out_client "," \
+      out_class[out_client] "," \
       out_responses[out_client] "," \
       out_max_labelsize[out_client] "," \
       sum_labelsize[out_client] / count_labels[out_client] "," \
@@ -261,25 +304,30 @@ END {
       count_3_label[out_client] / out_responses[out_client] "," \
       count_4_label[out_client] / out_responses[out_client] "," \
       count_rcode_0[out_client] / out_responses[out_client] "," \
-      count_rcode_1[out_client] / out_responses[out_client] "," \
-      count_rcode_2[out_client] / out_responses[out_client] "," \
       count_rcode_3[out_client] / out_responses[out_client] "," \
-      count_rcode_4[out_client] / out_responses[out_client] "," \
-      count_rcode_5[out_client] / out_responses[out_client] "," \
-      count_rcode_6[out_client] / out_responses[out_client] "," \
-      count_rcode_7[out_client] / out_responses[out_client] "," \
-      count_rcode_8[out_client] / out_responses[out_client] "," \
-      count_rcode_9[out_client] / out_responses[out_client] "," \
-      count_rcode_10[out_client] / out_responses[out_client] "," \
       count_qtype_1[out_client] / out_responses[out_client] "," \
       count_qtype_2[out_client] / out_responses[out_client] "," \
       count_qtype_5[out_client] / out_responses[out_client] "," \
       count_qtype_6[out_client] / out_responses[out_client] "," \
+      count_qtype_10[out_client] / out_responses[out_client] "," \
+      count_qtype_12[out_client] / out_responses[out_client] "," \
       count_qtype_15[out_client] / out_responses[out_client] "," \
       count_qtype_16[out_client] / out_responses[out_client] "," \
       count_qtype_28[out_client] / out_responses[out_client] "," \
+      count_qtype_33[out_client] / out_responses[out_client] "," \
+      count_qtype_35[out_client] / out_responses[out_client] "," \
+      count_qtype_37[out_client] / out_responses[out_client] "," \
+      count_qtype_38[out_client] / out_responses[out_client] "," \
+      count_qtype_43[out_client] / out_responses[out_client] "," \
+      count_qtype_44[out_client] / out_responses[out_client] "," \
+      count_qtype_46[out_client] / out_responses[out_client] "," \
       count_qtype_48[out_client] / out_responses[out_client] "," \
-      count_qtype_255[out_client] / out_responses[out_client];
+      count_qtype_52[out_client] / out_responses[out_client] "," \
+      count_qtype_99[out_client] / out_responses[out_client] "," \
+      count_qtype_255[out_client] / out_responses[out_client] "," \
+      count_qtype_256[out_client] / out_responses[out_client] "," \
+      count_qtype_257[out_client] / out_responses[out_client] "," \
+      count_qtype_32769[out_client] / out_responses[out_client];
   }
 }
 

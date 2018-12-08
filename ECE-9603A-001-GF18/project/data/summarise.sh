@@ -8,11 +8,11 @@ day=$1
 
 if [ -z "${day}" ]
 then
-  echo "specify a two-digit day" >&1
+  echo "syntax: $(basename $0) <day pattern>"
   exit 1
 fi
 
-find -L ${SOURCE}/${d} -type f -name "*201811${day}-*bz2" | while read f
+find -L ${SOURCE}/${d} -type f -name "*201811${day}*bz2" | while read f
 do
   filename=$(basename ${f} .bz2)
 
