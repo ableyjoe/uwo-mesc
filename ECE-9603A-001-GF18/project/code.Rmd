@@ -1,0 +1,175 @@
+---
+title: "ECE-9603A Project: Code"
+author: "Joe Abley -- jabley@uwo.ca"
+date: 2018-12-07
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+This document contains the R code with output and surrounding commentary used in the preparation of the project report[^1] for course ECE-9603A, fall 2018, Western University.
+
+[^1]: J. Abley, "Identifying the True Origin of DNS Traffic Without Reference to Client Source Address," ECE-9603A, Western University, Dec 2018. [Online]. Available: <https://github.com/ableyjoe/uwo-mesc/tree/master/ECE-9603A-001-GF18/project>
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+# R Setup
+```{r include=FALSE}
+require(UBL)
+require(e1071)
+require(randomForest)
+require(scales)
+require(rsample)
+require(caret)
+
+# determinism
+set.seed(1)
+```
+
+# Source Dataset
+
+Each observation in the source dataset corresponds to a five-minute interval during which responses were sent to a single client. Those clients are identified as "google", "facebook" and "other" in the "origin" column; other columns contain features that describe characteristics of the responses sent to that client during that window.
+
+```{r}
+sourceData = read.csv("/Users/jabley/Downloads/data/summary.csv")
+summary(sourceData)
+```
+
+## Zero-Variance Predictors
+
+For reasons that are not entirely clear, this dataset contains only observations about responses with RCODE=0 (NOERROR), and none with RCODE=3 (NXDOMAIN). This seems indicative of some kind of error in the collection process, which is worthy of attention at some point. For the purposes of this project, however, we will simply remove those columns since they are effectively constants.
+
+```{r}
+sourceData <- sourceData[, ! names(sourceData) %in% c("prop_rcode_0", "prop_rcode_3")]
+```
+
+## Outliers
+
+The *responses* predictor shows a maximum value dramatically larger than the median. It seems likely that there are outliers in the dataset that we could usefully eliminate in order to build a model that functions more sensibly over most test data.
+
+```{r}
+hist(sourceData$responses, col="red")
+```
+
+The vast majority of the values are less than 1000, so we shall eliminate all observations from the training set that have values that are higher:
+
+```{r}
+sourceData <- sourceData[sourceData$responses < 1000,]
+summary(sourceData$responses)
+hist(sourceData$responses, col="green")
+```
+
+## Addressing Class Imbalance
+
+The dataset is currently inbalanced by "origin":
+
+```{r}
+summary(sourceData$origin)
+```
+
+Since we have a fairly large number of observations (more than sufficient for building plausible models, and still plenty left over for testing) we will balance these datasets by understampling the facebook and google observations. This will also have the happy side-effect of making the dataset smaller and more manageable for ad-hoc experimentation. We use random undersampling since there is no obvious difference in the relevance of each class; our data collection simply didn't collect an equal number of observations.
+
+```{r}
+sourceData <- RandUnderClassif(origin ~ ., sourceData, "balance")
+summary(sourceData$origin)
+```
+
+## Normalisation
+
+The *responses*, *hour*, *max_labelsize*, *mean_labelsize*, *tlds_seen* and *slds_seen* predictors are not scaled between [0, 1], so we rescale them.
+
+Many of our proportional predictors are already scaled within a range of [0, 1]. Some predictors that relate to rare query types don't appear in observations with values very close to the upper bound of the possible range (i.e. they are much closer to zero) but their relative values compared to other predictors seem important to preserve, so we shall leave them as-is.
+
+```{r}
+to_rescale = c("responses", "hour", "max_labelsize", "mean_labelsize", "tlds_seen")
+summary(sourceData[to_rescale])
+sourceData[to_rescale] <- lapply(sourceData[to_rescale], rescale)
+summary(sourceData[to_rescale])
+```
+
+## Training and Test Datasets
+
+We will split our source data into training and test datasets (we will do k-fold cross-validation across the training set without a separate validation set). We choose 75% of the source data for the training set and the remainder in the test set.
+
+```{r}
+data_split <- initial_split(sourceData, prop = 0.75)
+trainingData <- training(data_split)
+testData <- testing(data_split)
+summary(trainingData)
+summary(testData)
+```
+
+# Classifiers
+
+## Multiclass Support Virtual Machine
+
+We will use the e1071 package to train a multiclass SVM model based on our training data. We use the library defaults of C-classification and the RBF kernel, which exposes the hyperparameters $\gamma$ and cost. We tune those parameters using a grid search.
+
+```{r}
+svm_tuning <- tune(svm, origin ~ ., data = trainingData, 
+  ranges = list(gamma = 2^(-1:1), cost = 2^(2:4)),
+  tunecontrol = tune.control(sampling = "fix"))
+summary(svm_tuning)
+plot(svm_tuning)
+```
+
+Based on that tuning we select $\gamma = blah$ and $cost = 123$ and create a classifier accordingly for 10-fold cross-validation:
+
+```{r}
+model_svm <- svm(origin ~ ., data = trainingData, gamma = 0.5, cost = 16, cross = 10)
+summary(model_svm)
+```
+
+# Random Forests
+
+We use the randomForest package to train a multiclass classifier based on the same training data. We use the lbrary default parameters, since we have not been able to improve upon them. In particular the default number of trees seems more than sufficient.
+
+```{r}
+model_rf <- randomForest(origin ~ ., trainingData)
+model_rf
+plot(model_rf)
+```
+
+There is no need for cross-validation using Random Forests since an unbiased estimate of the test set error is generated internally during the construction of the model. Cross-validation's main function here is a guard against over-fitting, which Random Forests don't suffer from.
+
+# Model Testing
+
+We use both models to classify traffic sources in the test dataset and assess their accuracy using a confusion matrix and a variety of calculated accuracy measures.
+
+## Multi-Class Support Vector Machine
+
+```{r}
+prediction_svm  = predict(model_svm, testData)
+confusionMatrix(data = prediction_svm, testData$origin)
+```
+
+Recall that:
+
+$$A = \frac{TP + TN}{TP + FP + TN + FN}$$
+
+The accuracy of the classifier can hence be represented as follows:
+
+$$A_{facebook} = \frac{1607 + (1681 + 67 + 12 + 1595)}{1607 + (4 + 35) + (1681 + 67 + 12 + 1595) + (36 + 71)} = 0.9714$$
+$$A_{google} = \frac{1681 + (1607 + 35 + 71 + 1595)}{1681 + (4+12) + (1607 + 35 + 71 + 1595) + (4+12)} = 0.9936$$
+$$A_{other} = \frac{1595 + (1607 + 4 + 36 + 1681)}{1595 + (71 + 12) + (1607 + 4 + 36 + 1681) + (35 + 67)} = 0.9653$$
+
+## Random Forests
+
+```{r}
+prediction_rf = predict(model_rf, testData)
+confusionMatrix(data = prediction_rf, testData$origin)
+```
+
+Again, recalling:
+
+$$A = \frac{TP + TN}{TP + FP + TN + FN}$$
+
+We obtain:
+
+$$A_{facebook} = \frac{1660 + (1674 + 2 + 17 + 1674)}{1660 + (6 + 21) + (1674 + 2 + 17 + 1674) + (3 + 51)} = 0.9841$$
+$$A_{google} = \frac{1674 + (1660 + 21 + 51 + 1674)}{1674 + (3 + 2) + (1660 + 21 + 51 + 1674) + (6 + 17)} = 0.9945$$
+$$A_{other} = \frac{1674 + (1660 + 6 + 3 + 1674)}{1674 + (51 + 17) + (1660 + 6 + 3 + 1674) + (21 + 2)} = 0.9822 $$
