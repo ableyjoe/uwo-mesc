@@ -34,7 +34,7 @@ Source Address}
 
 
 
-\date{2018-12-05 22:37:08 -0500}
+\date{2018-12-08 00:12:34 -0500}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt plus 2pt minus 1pt}
 \let\tightlist\relax % silly pandoc thing
@@ -65,7 +65,7 @@ Source Address}
 \maketitle
 \begin{abstract}
 We demonstrate a model that is able to classify the originating system
-respobsible for stateless Domain Name System (DNS) traffic received at
+responsible for stateless Domain Name System (DNS) queries received at
 an authoritative DNS server without reference to source address. The
 ability to determine whether particular DNS query traffic received at an
 authoritative server is legitimately sourced from a particular client
@@ -88,7 +88,7 @@ present, however, UDP is the overwhelmingly dominant transport protocol
 in use; for example, according to statistics published by ICANN for
 queries received at the L root server, UDP accounts for 98\% of all
 queries
-received\footnote{\url{http://stats.dns.icann.org/plotcache/L-Root/transport_vs_qtype/2018-12-03T00:00-2018-12-03T23:59-all.html}}.
+received.\footnote{\url{http://stats.dns.icann.org/plotcache/L-Root/transport_vs_qtype/2018-12-03T00:00-2018-12-03T23:59-all.html}}
 
 Since UDP transport for DNS is stateless, consisting of single-datagram
 queries and responses with no setup or tear-down handshake, there are
@@ -120,9 +120,9 @@ real origin of queries received over a PNI can be known with high
 accuracy; the origin of queries received over the Internet, in contrast,
 cannot. We refer to the former as \emph{trusted} paths, and the latter
 as \emph{untrusted}. Trusted paths exist to Google Public
-DNS\footnote{\url{https://dns.google.com}}, a public DNS resolver system
+DNS,\footnote{\url{https://dns.google.com}} a public DNS resolver system
 configured for use by a large number of end-users, and
-Facebook\footnote{\url{https://www.facebook.com}}, whose resolver
+Facebook,\footnote{\url{https://www.facebook.com}} whose resolver
 systems are mainly used by back-end systems that build previews for
 links shared between users of Facebook's social media platform. The
 traffic patterns of each are expected to be usefully different.
@@ -137,22 +137,22 @@ in a particular web page, or changes in the Time To Live (TTL)
 parameters of high-use domain names. This paper describes a system that
 aims to provide such a classification.
 
-A raw DNS dataset is collected in the form of individual (request,
+We collected a raw DNS dataset in the form of individual (request,
 response) DNS messages received from and sent to a single apparent
 source over period of two weeks. We split the resulting query stream
 into five minute intervals and from each we extract a vector of
 variables that describes the traffic received from each client during
 that time. Each such vector, once normalised, represents a single
 observation related to a single client. Observations that correspond to
-traffic received from trusted sources can be used as a training dataset.
-Observations corresponding to DNS traffic that definitively did not
-arrive from a trusted source can also be incorporated as ``other''. The
-resulting model can be used to classify five-minute samples of query
-streams from purported single sources to classify the origin of the
-query traffic as ``Facebook'', ``Google'' or ``Other''. Since query
-sources for each category feature in an equal number of traffic samples,
-it is straightforward to produce a training dataset that is balanced
-across the three categories.
+traffic received from the trusted sources, in this case Google and
+Facebook, can be used as a training dataset. Observations corresponding
+to DNS traffic that definitively did not arrive from a trusted source
+can also be incorporated as ``other''. The resulting model can be used
+to classify five-minute samples of query streams from purported single
+sources to classify the origin of the query traffic as ``facebook'',
+``google'' or ``other''. Since query sources for each category feature
+in an equal number of traffic samples, it is straightforward to produce
+a training dataset that is balanced across the three categories.
 
 This paper is organised as follows. Section \ref{sec:introduction}
 introduces the problem and provides some high-level background on the
@@ -228,16 +228,18 @@ The tuning parameters for the RF ensemble model are:
 \tightlist
 \item
   the size of the subset of predictors randomly selected at each split,
-  \(m_try\). Breiman suggests setting \(m_try\) to be one third of the
-  number of predictors.
+  \(m_{try}\). Breiman suggests \citep{Breiman2001} setting \(m_{try}\)
+  to be the square root of the number of predictors.
 \item
   the number of trees in the forest. Breiman has proved that random
-  forests are immune from overfitting, but the accuracy
-  benefit:computational cost is expected to decrease as the forest
-  becomes larger.
+  forests are immune from overfitting, but but there might be some
+  benefit in computational expense in limiting the size of the forest to
+  the number of the trees that provides measurable benefit.
 \end{itemize}
 
 \subsection{Accuracy Measures}\label{sec:accuracy-measures}
+
+\label{sec:accuracy}
 
 We calculate a confusion matrix over a test dataset:
 
@@ -248,23 +250,6 @@ three classifications of traffic samples, we are able to use a
 straightforward measure of accuracy, A:
 
 \[A = \frac{TP + TN}{TP + FP + TN + FN}\]
-
-Without a particular application for the models, it is difficult to
-assess the relative importance of false positives or false negatives in
-our model. However, as a kindness to a reader with a business case in
-mind, we calculate the precision, P, the recall, R and the specificity,
-S:
-
-\[P = \frac{TP}{TP + FP}\]
-
-\[R = \frac{TP}{TP + FN}\]
-
-\[S = \frac{TN}{TN + FP}\]
-
-As is conventional, we also calculate the F1 score, F, as the harmonic
-mean of the precision and recall metrics:
-
-\[F = \frac{2PR}{P + R}\]
 
 \section{Related Work}\label{sec:related-work}
 
@@ -303,15 +288,16 @@ that the apparent sources of DNS queries are legitimate.
 
 \subsection{Overview}\label{sec:overview}
 
-\label{sec:methodology_overview} A complete set of DNS query data
-received with UDP transport over trusted and untrusted paths at a major
-anycast site in Ashburn, VA, USA was collected. This source data is
-based on raw packet captures in PCAP
-format\footnote{PCAP, named after the C library \texttt{libpcap}, is the file format used by the \texttt{tcpdump} utility},
+\label{sec:methodology_overview} We collected a complete set of DNS
+query data received with UDP transport over trusted and untrusted paths
+at a major anycast site in Ashburn, VA,
+USA.\footnote{This is a private dataset that the authors of this paper have authorisation to use.}
+This source data is based on raw packet captures in PCAP
+format,\footnote{PCAP, named after the C library \texttt{libpcap}, is the file format used by the \texttt{tcpdump} utility}
 post-processed into \emph{dnscount} objects to extract various
 parameters from the raw DNS messages: a timestamp; client and server
 adresses (IPv4 and IPv6); the query type; query name; transport
-protocol; response code and DNS message flags. Separate \emph{dnscount}
+protocol; response code; and DNS message flags. Separate \emph{dnscount}
 objects are stored for queries and responses; the query objects differ
 slightly in composition since they naturally do not include a response
 code.
@@ -330,20 +316,20 @@ the collection process.
 
 \subsection{Data Reduction}\label{sec:data-reduction}
 
-Query summaries at just this site represent around 500GB of data when
-compressed using bzip2\footnote{\url{http://www.bzip.org/}}, and hence
-an in-place reduction and summarisation process was undertaken:
+The query summaries at this particular network site in Ashburn, VA
+represent around 500GB of data per month when compressed using
+bzip2,\footnote{\url{http://www.bzip.org/}} and hence an in-place
+reduction and summarisation process was undertaken:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  Only data from the first two weeks in November 2018 were considered.
-  This seems intuitively like a long enough period to accommodate
-  different workday and weekend behaviour without represending an
-  unmaageable data set, although it seems intuitively true that a longer
-  sample period would result in a better model (see also section
-  \ref{sec:future});
+  Only data from the first week in November 2018 was considered. This
+  seems intuitively like a long enough period to accommodate different
+  workday and weekend behaviour without represending an unmaageable data
+  set, although it seems intuitively true that a longer sample period
+  would result in a better model (see also section \ref{sec:future});
 \item
   Query \emph{dnscount} objects were discarded, since the corresponding
   response objects contain a superset (see section
@@ -360,12 +346,12 @@ an in-place reduction and summarisation process was undertaken:
 
 The resulting summaries (compressed again using bzip2) occupied around
 5GB, which is a more manageable data volume for transport over a network
-to a central location. This data also contains no query names, allowing
-greater confidence that it contains no personally-identifiable
-information and hence presents no significant threat to personal
-privacy.
+to a central location. This data also contains no query names or client
+(DNS resolver) IP addresses, allowing some confidence that it is free of
+personally-identifiable information and hence presents no significant
+threat to personal privacy.
 
-\subsection{Data Extraction}\label{sec:data-extraction}
+\subsection{Feature Engineering}\label{sec:feature-engineering}
 
 \label{sec:datasetextraction}
 
@@ -397,21 +383,45 @@ Google and Facebook resolvers.
 \item
   the proportion of responses with response
   code\footnote{\url{https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml\#dns-parameters-6}}
-  0, 1, 2, 3, 4 5, 6, 7, 8, 9 or 10 (eleven separate variables)
+  0 or 3 (two separate variables)
 \item
   the proportion of responses with query
   type\footnote{\url{https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml\#dns-parameters-4}}
-  1, 2, 5, 6, 15, 16, 28, 48 and 255 (eight separate variables)
+  1, 2, 5, 6, 15, 16, 28, 33, 35, 37, 38, 43, 44, 46, 48, 52, 99, 255,
+  256, 257 and 32769 (twenty-one separate variables)
 \end{itemize}
 
-Closer examination of this summary set revealed data for around two
-million clients; of those two million, 80\% of responses observed during
-the sample window were sent to just ten thousand. This is a decidedly
-asymmetric distribution with a long tail.
+The query types chosen were those that appeared in the data and either
+looked intuitively interesting or were frequently used. Frequently used
+types include A (IPv4 address) and AAAA (IPv6 address); some types were
+somewhat infrequent but were interesting: 32769 (DLV) and 33 (SRV) are
+deprecated, for example, which makes them potentially more likely to
+appear in the queries sent from a public resolver service like Google's
+than a private one like Facebook's.
+
+Datasets with the input variables described were further reduced for the
+purposes of this experiment as follows:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  The day of the week and the hour of the day were extracted from the
+  timestamp field, since all other components of the date seemed either
+  too granular to allow any real correlation between different
+  observations or invariant (e.g.~all observations were made in the same
+  month and year).
+\item
+  The site code was discarded, since it's invariant across all
+  observations in this dataset.
+\end{enumerate}
+
+These adaptations would not be applicable to datasets that included
+observations over a longer time base, or from multiple sites.
 
 Training and validation datasets were extracted from these summary sets
-by collecting all observations for (\emph{t}, \emph{sitecode},
-\emph{client}) \(\forall t\), \emph{sitecode} = IAD1 and each of:
+by collating all observations for each unique client observed in each
+five-minute \emph{dnscount} sample, in the three cases:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -427,18 +437,17 @@ by collecting all observations for (\emph{t}, \emph{sitecode},
   dataset).
 \end{enumerate}
 
-\emph{Describe the resulting datasets}
+We choose particular clients in each category that demonstrate a
+reasonable degree of activity, since it seems clear that an observation
+that is based on a very small number of queries is unlikely to be very
+useful as a predictor of query source: the patterns evident in the
+observation will be correspondingly small. This selection process is
+based on calculating the number of responses over the entire dataset for
+all clients, sorting the resulting list and selecting active clients
+that correspond to each of our three classifications.
 
-\subsection{Feature Engineering}\label{sec:feature-engineering}
-
-\begin{itemize}
-\tightlist
-\item
-  derive day-of-week and hour-of-day from date field; discard month and
-  year since they would be the same for all observations
-\item
-  discard site code, since it's the same for all observations
-\end{itemize}
+Finally, the source datasets are reviewed in order to identify near-zero
+variance predictors, and the corresponding predictors were eliminated.
 
 \subsection{Validation Process}\label{sec:validation-process}
 
@@ -449,54 +458,204 @@ data, giving a better measure of validation than a single
 training/validation split.
 
 The selected model is then trained over the entire training set, and
-applied to untrained data to measure its accuracy.
+applied to the test set to measure the accuracy of its predictions, as
+described in \ref{sec:accuracy}.
 
 \section{Evaluation}\label{sec:evaluation}
 
 \label{sec:evaluation}
 
-Results of the process I applied
+\subsection{Software}\label{sec:software}
 
-Can include a paragraph describing what languages, packages and
-libraries were used.
+The implementations of SVM and RF used in this experiment were those
+included in the
+e1071\footnote{\url{https://cran.r-project.org/web/packages/e1071/}} and
+randomForest\footnote{\url{https://cran.r-project.org/web/packages/randomForest/}}
+libraries, respectively, used within
+R\footnote{\url{https://www.r-project.org/}}. Data summarisation scripts
+were written in POSIX sh and awk, and can be reviewed in the same
+repository that holds the source of this document; see section
+\ref{sec:colophon}.
 
-Possibilities: accuracy measures, graphs showing tuning process, tables
-and graphs comparing different approaches, tuned parameter ranges and
-selected values.
+\subsection{Data Preparation}\label{sec:data-preparation}
 
-No code.
+A dataset consisting of 2,895,503 observations of 35 predictor variables
+was obtained as described in \ref{sec:datasetextraction}. These
+observations were pre-classified as ``facebook'' (923,432 observations),
+``google'' (1,954,409 observations) or ``other'' (17,212 observations).
+
+For reasons that were not clear at the time of data collection, every
+observation in the source dataset had appeared to be made on responses
+with RCODE=0 (NOERROR) and none with RCODE=3 (NXDOMAIN) or any other
+value. This is known not to be true, since if the DNS infrastructure
+responsible for sending the responses counted in this dataset behaved
+like that it would be a severe operational problem for the Internet.
+Lacking any simple means to resolve whatever problem caused these
+variables to carry false data, they were simply removed.
+
+The \emph{responses} predictor was observed to have a small number of
+large outliers which were not representative of the dataset as a whole.
+Observations with \emph{response} values greater than a safe threshold
+were removed.
+
+The dataset exhibited a pronounced class imbalance; although the
+observations classified as ``google'' and ``facebook'' were of roughly
+the same number (within a factor of two) the ``other'' class was
+substantially smaller: approximately 0.4\% of the size of the ``google''
+class. Random-basis undersampling of the ``facebook'' and ``google''
+classes was undertaken to reduce all three classes to the same size.
+
+The \emph{responses}, \emph{hour}, \emph{max\_labelsize},
+\emph{mean\_labelsize}, \emph{tlds\_seen} and \emph{slds\_seen}
+predictors were rescaled within the range {[}0, 1{]} in order to match
+the various \emph{prop}-named predictors.
+
+The result of this process was a balanced, normalised dataset which was
+split into a training dataset (75\%, 15,325 observations) and a test
+dataset (25\%, 5,108 observations).
+
+\subsection{Support Vector Machine}\label{sec:support-vector-machine}
+
+A multiclass Support Vector Machine classifier was built using
+C-classification and the RBF kernel, exposing the principal
+hyperparameters \(\epsilon\) and \emph{cost}. A model was trained and
+tuned using a grid search over those two parameters, resulting in a
+tuned model with \(\gamma = 0.5\) and \(cost = 16\).
+
+\begin{center}\includegraphics[width=1\linewidth]{SVM-tuning} \end{center}
+
+10-fold cross-validation of the tuned model produced a mean accuracy
+across all folds of 95.0299.
+
+\subsection{Random Forest}\label{sec:random-forest-1}
+
+A multiclass Random Forest classifier was built. The principal
+hyperparameter available to tune is the number of trees in the forest;
+it was observed that the chosen value of 500 seemed sufficient to ensure
+stability in observed error. Random Forest does not suffer from
+over-fitting as the number of trees increase and hence there was little
+motivation to further constrain the forest size.
+
+\begin{center}\includegraphics[width=1\linewidth]{RF-tuning} \end{center}
+
+The implementation of Random Forest provides an OOB error rate which is
+recommended for use instead of a cross-validation score. The OOB
+estimate of the error rate in this case was 2\%.
+
+\subsection{Accuracy Assessment}\label{sec:accuracy-assessment}
+
+Each model was tested against the test dataset created as 25\% of the
+observations in the source dataset, and a confusion matrix from each was
+produced.
+
+\subsubsection{Support Vector
+Machine}\label{sec:support-vector-machine-1}
+
+The accuracy of the SVM model is shown in the following confusion
+matrix:
+
+\begin{center}\includegraphics[width=1\linewidth]{SVM} \end{center}
+
+Recall that:
+
+\[A = \frac{TP + TN}{TP + FP + TN + FN}\]
+
+The accuracy of the classifier can hence be represented as follows:
+
+\[A_{facebook} = 0.9714\] \[A_{google} = 0.9936\] \[A_{other} = 0.9653\]
+
+The SVM model exhibits high accuracy over the test set. Further study
+would be required to validate its use as a general-purpose model;
+fortunately there is no shortage of training data.
+
+\subsubsection{Random Forest}\label{sec:random-forest-2}
+
+The accuracy of the RF model is shown in the following confusion matrix:
+
+\begin{center}\includegraphics[width=1\linewidth]{RF} \end{center}
+
+Again, recalling:
+
+\[A = \frac{TP + TN}{TP + FP + TN + FN}\]
+
+We obtain:
+
+\[A_{facebook} = 0.9841\] \[A_{google} = 0.9945\]
+\[A_{other} = 0.9822 \]
+
+The RF model hence exhibits slightly higher accuracy over the test set,
+and the same commentary as that over the SVM accuracy applies. It should
+be noted that, at least in the implementations used in this paper,
+Random Forests were far less computationally expensive over training
+sets of the dimensionality seen here than Support Vector Machines,
+perhaps because Random Forest lends itself more naturally to multi-class
+problems.
 
 \section{Conclusion}\label{sec:conclusion}
 
 \label{sec:conclusion}
 
-Short summary of the paper/report
+This paper aims to find a method that would allow a DNS query stream
+received at an authoritative-only DNS server with UDP transport to be
+classified as originating from DNS resolvers at Google, Facebook or
+elsewhere, without reference to the IP source addresses of the queries.
 
-Should include problem description, how I solved it and the main
-results.
+Training datasets were created from five-minute samples of DNS traffic
+captured off the wire at a single production Afilias DNS node,
+responsible for serving around 300 top-level domains. Data reduction and
+feature engineering were carried out, informed by both domain knowledge
+and quantitative measures (e.g.~elimination of zero-variance
+predictors). Two different classes of tuned model were built, one based
+on Support Vector Machines and one on Random Forests. Both models
+performed well, exhibiting a high degree of accuracy across a multitude
+of measures.
+
+The approach described and tested in this paper seems like a feasible
+starting point for an operational system that could perform
+near-real-time DNS traffic classification, providing capabilities such
+as threshold alerting for traffic whose content appears not to match its
+purported source.
 
 \section{Future Study}\label{sec:future-study}
 
 \label{sec:future}
 
-\begin{itemize}
-\tightlist
-\item
-  different algorithms
-\item
-  incorporate new classes (new trusted paths to resolvers)
-\item
-  string-similarity metrics for QNAMEs
-\item
-  quantitative measurements of query entropy
-\item
-  larger sample period
-\item
-  continuous learning model
-\item
-  recurrant neural networks or other models that exhibit temporal
-  dynamic behaviour for a time sequence
-\end{itemize}
+This paper describes an assessment of two models, one based on Support
+Vector Machines and one on Random Forests. These approaches were chosen
+based on the ready availability of implementations and their reputations
+for use in constructing supervised classifiers. It is certainly
+possible, however, that a wider selection of models for assessment might
+yield better approaches.
+
+Three classifications were included in the datasets used in this
+experiment. The specific source systems chosen, Facebook and Google,
+were known to have different end-client populations and to have been
+implemented using different DNS implementations. Additional exploration
+of DNS data originating from other, less diverse client populations
+would be useful to validate the general approach.
+
+The features extracted from the source data relating to Query Names were
+relatively unsophisticated, and seem unlikely to be capable of exposing
+many patterns that might well be useful in characterising a particular
+source system. Incorporating stronger string-similarity metrics might be
+useful in exposing a measure of query entropy.
+
+Using five-minute samples of query data is only suitable for clients
+that send statistically-significant numbers of queries within that
+sample interval. Increasing the sample interval (say, to an hour) might
+allow less talkative clients to be assessed, but might also have an
+impact on the observed variance in predictors between different classes.
+A statistical approach to choosing a sample interval is likely better
+than guessing.
+
+Preparing datasets, centralising them and training and tuning models
+took a significant amount of time. Much efficiency could be added using
+conventional devops automation techniques, but a more scaleable approach
+might well be found in finding an effective model that is amenable to
+continuous learning. The data collection infrastructure deployed by
+Afilias already facilitates data repatriation to a central location in
+near real-time, and hence in-place, continuous training is at least
+practical from a logistical perspective.
 
 It is reasonable to expect that the grouping and ordering of DNS queries
 might be relevant in the classification of a query stream as originating
@@ -512,15 +671,15 @@ corresponding identifying behaviour. Particular web services use
 signature combinations of content distribution network or embedded
 advertiser beacons that might well provide a useful signature through a
 resolver, even with the significant caching potential of answers
-obtained from top-level domain authoritative nameservers.
-
-The models described in this paper treat each query stream as an
-unordered set of observations. The applicability of other models whose
-training can be influenced by the ordering of data, e.g.~those based on
-recurant multilayer perceptron networks, seem worthy of future
-investigation.
+obtained from top-level domain authoritative nameservers. The models
+described in this paper treat each query stream as an unordered set of
+observations. The applicability of other models whose training can be
+influenced by the ordering of data, e.g.~those based on recurant
+multilayer perceptron networks, seem worthy of further investigation.
 
 \section{Colophon}\label{sec:colophon}
+
+\label{sec:colophon}
 
 This document has been written in R
 Markdown\footnote{\url{https://rmarkdown.rstudio.com}}; the code used to
