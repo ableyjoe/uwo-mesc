@@ -1,0 +1,41 @@
+\documentclass[fontsize=9pt,letterpaper,twocolumn]{scrartcl}
+
+\usepackage{cite}
+\usepackage{url}
+
+\begin{document}
+
+\titlehead{{\Large Western University \hfill ECE 9603\\}
+  Electrical and Computer Engineering \hfill Fall 2018}
+\subject{Project Review}
+\title{Rating Extraction through Sentiment and Sarcasm Analysis}
+\author{Joe Abley, \texttt{jabley@uwo.ca}}
+
+\maketitle
+
+\begin{abstract}
+This is a review of \cite{Manias2018}, as presented in ECE 9603; the full project description and detailed results have not been made available. This review is submitted as part of the coursework for ECE 9603.
+
+\end{abstract}
+
+\section{Project Summary}
+Many web pages provide facilities to collect feedback, e.g. from customers or users. In many cases this feedback is collected in the form of both a rating and as free-text comments. Ratings are observed frequently to have a J-shaped distribution, with extremely high and low ratings appearing inflated compared to the normal distribution that might be expected. In the case where both ratings and comments are available, it is observed anecdotally that the distribution of comments is often different from the distribution of ratings. This project aims to address the incoherence between the user star rating and user comments using machine learning techniques to construct a model trained using public datasets. The resulting model was tested on a public dataset of reviews obtained from Yelp\cite{Yelp}.
+
+The Yelp dataset was preprocessed to remove various items such as URLs and hashtags from individual reviews. The result was subsequently tokenised, tagged according to Part of Speech (POS) and subject to lemmatization, a technique from linguistics which involves grouping together various related forms of a single word such that they can be identified by a single item, known as the word's lemma.
+
+Features were derived from each preprocessed review such as the number of particular parts of speech observed, the number as a proportion of sentence length and the SentiWordNet\cite{Baccianella10sentiwordnet3.0} score.
+
+Binary classifiers were constructed based on the Sentiment140\cite{Sentiment140} dataset, originally from Twitter, and the SARC\cite{arXiv:1704.05579v4} dataset, originally from Reddit.  21 hyper-optimised classification models and one Long Short Term Memory (LTSM) model were tested using 80:20 hold-out validation on a test set of 100,000 observations; LSTM was found to be the best approach for both applications. The LTSM model was further tuned using a grid search of 648 combinations of parameters, and achieved an F-Score of 0.737 (sentiment) and 0.702 (sarcasm).
+
+When applied to the Yelp dataset, the model predicted ratings that formed a balanced, normal distribution based on the natural language comments in reviews, while the star ratings applied by the same reviewers formed the J-shaped distribution that was noted earlier to have been observed elsewhere.
+
+\section{Constructive Feedback}
+The project was eloquently presented, and paced to deliver a high volume of information effectively in a relatively short time. The examples given in particular were engaging and familiar, and allowed the normalisation and feature selection processes to be easily understood by an audience without a thorough grounding in natural language processing.
+
+This study clearly represents an impressive amount of work. The grid searches used for model and neural network topology selection were comprehensive.
+
+The problem statement framed the observed incoherence between summary ratings and comments well, but the objective to \emph{address} them did not clearly identify an intended result. The work described in this project could be used as part of a user interface to influence the way that ratings are collected; it could be used to obviate the need for reviewer-supplied ratings;  it could be used to solve business problems such as recommendations or promotions in place of, or in combination with, the ratings provided by reviewers. The degree of dissonance between the ratings and comments left by particular reviewers might even be used to help classify the reviewer. The possible applications of this work seem varied, and it would have been useful to identify some of them in the presentation.
+
+\bibliographystyle{abbrvurl}
+\bibliography{ECE-9603A-Abley-review2}
+\end{document}
