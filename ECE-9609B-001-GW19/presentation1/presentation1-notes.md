@@ -312,7 +312,8 @@ traceroute to monster.hopcount.ca (67.215.197.158), 64 hops max, 52 byte packets
 10  monster (67.215.197.158)  36.949 ms
     vl160.gi0-0.agg1.dm.egate.net (67.215.192.84)  47.569 ms
     monster (67.215.197.158)  31.007 ms
-[octopus:~]% ```
+[octopus:~]%
+```
 
 
 
