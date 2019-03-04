@@ -59,7 +59,7 @@ about similar functionality available in other protocols, such as
 [OSI](https://en.wikipedia.org/wiki/OSI_model), none of which are
 relevant at the time of writing for practical, large-scale networking.
 
-## Unerlying Mechanism in IPv4
+## Underlying Mechanism in IPv4
 
 Packet networks generally require protocol support to mitigate
 topological loops; if they did not, any network would be vulnerable
@@ -158,4 +158,79 @@ delay, taking advantage of the payload and transport addresses
 identified in the responses to sort them and present a path regardless
 of the order in which they are received.
 
+## Internet Routing Architecture
+
+The Internet is a network of networks. On the Internet, there is a
+rough equivalence between a network with an internally-consistent
+routing policy operated by a single administrator and an Autonomous
+System, as used in the sense of the [Border Gateway Protocol
+(BGP)](https://tools.ietf.org/rfc/rfc4271.txt), the principal
+exterior gateway protocol used on the Internet today.
+
+Autonomous Systems connect in one or more places. The nature of that
+interconnection can be approximated by the following taxonomy:
+
+* _Transit_ -- an interconnection between a _Transit Provider
+Network_ and a _Customer Network_ which provides the Customer with
+access to the rest of the Internet. A Customer may have multiple
+Transit Providers (in which case it is said to be multi-homed).
+There are [several common aproaches to
+multi-homing](https://tools.ietf.org/rfc/rfc4116.txt). In a transit
+interconnection, the Transit Provider provides a full set of routes
+to the Customer, and the Customer provides just its own routes (and
+those of any downstream networks for which Customer is itself a
+transit provider). A simple, single-homed Customer might not use BGP
+but might rely upon static routing. Customer links are usually paid
+for by the customer.
+* _Peering_ -- an interconnection between two networks intended to
+share traffic between them, without a transit relationship. Peering
+links are often settlement-free.
+
+A small number of large network operators gain access to the entire
+Internet using only peering interconnections. These operators are
+commonly referred to as "default-free" or "tier-1"; while it is not
+possible to know the routing arrangements of commercial operators
+with great accuracy (the information is tied up in business privilege
+and non-disclisure agreements) the following is a [reasonable
+list](https://en.wikipedia.org/wiki/Tier_1_network):
+
+* AT&T
+* CenturyLink (encompassing Level3, Qwest, Savvis, Global Crossing, Time Warner Telecom and Exodus)
+* Deutsche Telekom
+* GTT (encompassing Tinet, nLayer, Hibernia Atlantic and Interoute)
+* KPN
+* Liberty Global
+* NTT (formerly Verio)
+* Orange (formerly OpenTransit, France Telecom)
+* PCCW Global
+* Sprint (encompassing SoftBank)
+* Tata (encompassing Teleglobe)
+* Telecom Italia (Seabone)
+* Telefonica
+* Telia
+* Verizon (encompassing UUNET and XO Communications, formerly Concentric Network, Nextlink, Allegiance Telecom, etc)
+* Zayo (formerly AboveNet)
+
+Tier-1 carriers such as these tend to be well-connected to each
+other in multiple locations chosen to ensure that the effects of
+expected asymmetric routing are benign and do not cause great
+tromboning of return paths.
+
+
+## Practical Considerations
+
+### Round-Trip Latency
+
+serialisation delay
+queuing delay
+propagation delay
+prioritisation and rate limiting
+
+### Asymmetric Paths
+
+### Autonomous System Boundaries
+
+### Equal-Cost Multi-Path Routing
+
+### Multi-Protocol Label Switching (MPLS)
 
