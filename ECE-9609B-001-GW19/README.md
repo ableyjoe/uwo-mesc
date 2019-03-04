@@ -1,6 +1,6 @@
 # ECE-9609B-001-GW19
 
-Bits and pieces related to Dr Essex's [Introduction to Hacking](https://whisperlab.org/introduction-to-hacking/) course.
+Bits and pieces related to [Dr Essex](https://essex.cc)'s [Introduction to Hacking](https://whisperlab.org/introduction-to-hacking/) course.
 
 * `presentation1` contains notes and slides for a presentation on a
 tool not covered in the lectures, in this case `traceroute(8)`, presented
