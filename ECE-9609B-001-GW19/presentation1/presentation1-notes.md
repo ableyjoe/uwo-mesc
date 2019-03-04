@@ -255,6 +255,15 @@ fact the increased path distance on the returb path is the real
 cause, due to a different routing policy in the provider interconnecting
 in Chicago.
 
+The most useful traceroute output that can accompany a request to
+troubleshoot a network problem is a pair of traceroutes, one in
+each direction, and each sourced from the other's destination. Such
+information makes the network engineer's life simple since it
+includes path information in both directions; so easy, in fact, it
+never happens in real life.
+
+
+
 ### Equal-Cost Multi-Path (ECMP) Routing
 
 Capacity between routers can be expanded by choosing transmission
@@ -284,6 +293,28 @@ of traceroute is relatively easy to interpret; however, in some
 cases different equal-cost paths will have different path lengths,
 and in those cases the output can be confusing. The traceroute tool
 is generally not able to reassemble individual paths in those cases.
+
+```[octopus:~]% traceroute monster.hopcount.ca
+traceroute to monster.hopcount.ca (67.215.197.158), 64 hops max, 52 byte packets
+ 1  gateway (192.168.1.1)  1.829 ms  0.965 ms  0.915 ms
+ 2  * * *
+ 3  104-195-128-74.cpe.teksavvy.com (104.195.128.74)  60.122 ms * *
+ 4  ae3-119-agg01-tor.teksavvy.com (104.195.128.73)  21.224 ms  39.237 ms  43.084 ms
+ 5  ae4-0-bdr01-tor.teksavvy.com (206.248.155.94)  62.764 ms  30.225 ms
+    ae2-0-bdr01-tor2.teksavvy.com (206.248.155.17)  47.560 ms
+ 6  ae12-0-bdr01-tor.teksavvy.com (206.248.155.10)  35.719 ms  55.209 ms  29.771 ms
+ 7  216.235.0.139 (216.235.0.139)  56.681 ms
+    egate.ip4.torontointernetxchange.net (206.108.34.8)  41.782 ms  28.759 ms
+ 8  216.235.0.139 (216.235.0.139)  74.153 ms  42.341 ms  34.969 ms
+ 9  216.235.0.74 (216.235.0.74)  46.567 ms
+    vl160.gi0-0.agg1.dm.egate.net (67.215.192.84)  26.804 ms
+    216.235.0.74 (216.235.0.74)  57.035 ms
+10  monster (67.215.197.158)  36.949 ms
+    vl160.gi0-0.agg1.dm.egate.net (67.215.192.84)  47.569 ms
+    monster (67.215.197.158)  31.007 ms
+[octopus:~]% ```
+
+
 
 ### Multi-Protocol Label Switching (MPLS)
 
