@@ -9,9 +9,12 @@ network that uses the IP protocol. It's familiar and simple; you
 type `traceroute` with an address or a hostname as a parameter and
 it shows you the path. However, interpretation of traceroute's
 output requires some appreciation for the Internet routing architecture,
-not to mention practicalities about its deployment. This tutorial
-aims to illustrate that traceroute is not always as simple as it
-seems.
+not to mention practicalities about its deployment. Even experienced
+network operators at well-known, large carriers have been known to draw
+dubious conclusions from traceroute's output.
+
+This tutorial aims to illustrate that traceroute is not always as
+simple as it seems.
 
 ## Overview
 
@@ -158,73 +161,42 @@ delay, taking advantage of the payload and transport addresses
 identified in the responses to sort them and present a path regardless
 of the order in which they are received.
 
-## Internet Routing Architecture
-
-The Internet is a network of networks. On the Internet, there is a
-rough equivalence between a network with an internally-consistent
-routing policy operated by a single administrator and an Autonomous
-System, as used in the sense of the [Border Gateway Protocol
-(BGP)](https://tools.ietf.org/rfc/rfc4271.txt), the principal
-exterior gateway protocol used on the Internet today.
-
-Autonomous Systems connect in one or more places. The nature of that
-interconnection can be approximated by the following taxonomy:
-
-* _Transit_ -- an interconnection between a _Transit Provider
-Network_ and a _Customer Network_ which provides the Customer with
-access to the rest of the Internet. A Customer may have multiple
-Transit Providers (in which case it is said to be multi-homed).
-There are [several common aproaches to
-multi-homing](https://tools.ietf.org/rfc/rfc4116.txt). In a transit
-interconnection, the Transit Provider provides a full set of routes
-to the Customer, and the Customer provides just its own routes (and
-those of any downstream networks for which Customer is itself a
-transit provider). A simple, single-homed Customer might not use BGP
-but might rely upon static routing. Customer links are usually paid
-for by the customer.
-* _Peering_ -- an interconnection between two networks intended to
-share traffic between them, without a transit relationship. Peering
-links are often settlement-free.
-
-A small number of large network operators gain access to the entire
-Internet using only peering interconnections. These operators are
-commonly referred to as "default-free" or "tier-1"; while it is not
-possible to know the routing arrangements of commercial operators
-with great accuracy (the information is tied up in business privilege
-and non-disclisure agreements) the following is a [reasonable
-list](https://en.wikipedia.org/wiki/Tier_1_network):
-
-* AT&T
-* CenturyLink (encompassing Level3, Qwest, Savvis, Global Crossing, Time Warner Telecom and Exodus)
-* Deutsche Telekom
-* GTT (encompassing Tinet, nLayer, Hibernia Atlantic and Interoute)
-* KPN
-* Liberty Global
-* NTT (formerly Verio)
-* Orange (formerly OpenTransit, France Telecom)
-* PCCW Global
-* Sprint (encompassing SoftBank)
-* Tata (encompassing Teleglobe)
-* Telecom Italia (Seabone)
-* Telefonica
-* Telia
-* Verizon (encompassing UUNET and XO Communications, formerly Concentric Network, Nextlink, Allegiance Telecom, etc)
-* Zayo (formerly AboveNet)
-
-Tier-1 carriers such as these tend to be well-connected to each
-other in multiple locations chosen to ensure that the effects of
-expected asymmetric routing are benign and do not cause great
-tromboning of return paths.
-
-
 ## Practical Considerations
 
 ### Round-Trip Latency
 
-serialisation delay
-queuing delay
-propagation delay
-prioritisation and rate limiting
+As described, traceroute measures the round-trip latency involved
+in sending a probe packet and receiving some kind of corresponding
+response (from something). It is not a measurement of elapsed time
+between the originator of the probe packet and a particular hop on
+the path.
+
+The latency recorded by traceroute has multiple components:
+
+* _Queuing Delay_ and _Serialisation Delay_ -- the time taken for a
+datagram to be inserted into a queue and for that queue to be drained
+through an essentially serial network interface. These effects are
+minimal in modern networks with high-speed (e.g. 10G+) interfaces,
+but become significant when interfaces face congestion because they
+are over-subscribed. An interface that is 80% utilised is one that
+is busy transmitting frames 80% of the time, increasing the probability
+that a probe packet will be delayed in a queue, increasing the
+observed round-trip latency.
+* _Propagation Delay_ -- the time taken for a datagram to travel over
+a network. In the case of an optical network this can be approximated by
+the speed of light in the transmission medium, e.g. 0.67c in a fibre
+core with a refractive index of 1.48 (1/0.67). A hop through a
+geostationary satellite involves a signal path of 35,786km up and
+the same down, adding around 250ms; low Earth orbit (LEO) satellites
+add around 40ms by comparison, and medium Earth orbit (MEO) around
+125ms.
+* _Processing Delay_ -- whilst some routers can process TTL-expired
+packets and ICMP message synthesis in FPGAs on line cards, others
+require general-purpose CPUs to do the processing which can add
+noticeable delay. Even those routers that don't incur the delay of
+a trip across a control bus and a spin around a CPU frequently
+rate-limit the number of such responses that can generated, which
+can result in response queueing delays or dropped responses.
 
 ### Asymmetric Paths
 
