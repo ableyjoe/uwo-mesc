@@ -399,7 +399,8 @@ facility) in Toronto, 7007 54th Street SE in Calgary (Flexential
 data centre) and 2001 6th Avenue in Seattle (the so-called Westin
 building).
 
-``` 6  be5.pe01.905KingStW01.YYZ.beanfield.com (72.15.49.31)  55.199 ms
+```
+ 6  be5.pe01.905KingStW01.YYZ.beanfield.com (72.15.49.31)  55.199 ms
     be6.bfr01.905kingstw01.yyz.beanfield.com (72.15.49.28)  55.749 ms
     be5.pe01.905KingStW01.YYZ.beanfield.com (72.15.49.31)  55.266 ms
  7  be8.bfr01.151FrontStW01.YYZ.beanfield.com (72.15.49.83)  53.870 ms
