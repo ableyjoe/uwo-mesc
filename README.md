@@ -1,6 +1,7 @@
 # uwo-mesc
 bits and pieces related to Western MESc
 
- * `google-or-not-google` -- rough proposal for a classifier that can identify DNS queries received from Google Public DNS without reference to source addresses
+ * `ECE-9603A-001-GF18` -- Dr Grolinger's introduction to data analytics
+ * `ECE-9609B-001-GW19` -- Dr Essex's introduction to hacking
  * `spoorploeter` -- anycast mapping, verfploeter + traceroute
 
