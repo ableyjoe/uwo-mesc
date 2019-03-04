@@ -78,6 +78,28 @@ explicit inclusion of IPv6 references would really just double the
 size of the text without providing any additional information. What
 is spoken here for v4 goes for v6, too.
 
+```[monster:~]% traceroute6 www.google.com
+traceroute6 to www.google.com (2607:f8b0:4000:80c::2004) from 2001:4900:1:392::158, 64 hops max, 12 byte packets
+ 1  2001:4900:1:392:219:e7ff:fe65:9b08  0.980 ms  3.613 ms  1.090 ms
+ 2  2001:4900:0:1::10:1  4.061 ms  1.701 ms  2.727 ms
+ 3  2001:4900:2:501::5  3.639 ms  3.676 ms  1.490 ms
+ 4  he.ip6.torontointernetxchange.net  1.628 ms  1.562 ms  1.523 ms
+ 5  google.torontointernetxchange.net  1.648 ms  2.745 ms  3.952 ms
+ 6  2001:4860:0:16::3  2.286 ms
+    2001:4860:0:11d6::3  2.233 ms
+    2001:4860:0:17::3  7.307 ms
+ 7  2001:4860::c:4000:d29f  14.792 ms  14.392 ms  16.832 ms
+ 8  2001:4860::8:4000:ca1a  35.261 ms  35.373 ms  35.886 ms
+ 9  2001:4860::c:4000:d8f6  36.377 ms  37.449 ms  83.290 ms
+10  2001:4860::1:0:c04d  36.900 ms
+    2001:4860::1:0:c6eb  35.428 ms  36.804 ms
+11  2001:4860:0:1::2787  35.296 ms
+    2001:4860:0:1::2785  36.837 ms  36.190 ms
+12  2001:4860:0:1::2787  35.530 ms  34.943 ms
+    dfw06s48-in-x04.1e100.net  37.070 ms
+[monster:~]% 
+```
+
 Kindness to the reader is further extended by the refusal to talk
 about similar functionality available in other protocols, such as
 [DECNet](https://en.wikipedia.org/wiki/DECnet),
@@ -339,6 +361,24 @@ which the ICMP response packet was sent. A traceroute over an MPLS
 core can produce strange-looking output where whole sections of the
 output have the same latency measurements reported.
 
+```[monster:~]% traceroute route-server.cbbtier3.att.net
+traceroute to route-server.cbbtier3.att.net (12.0.1.28), 64 hops max, 40 byte packets
+ 1  h67-215-197-147.host.egate.net (67.215.197.147)  0.991 ms  0.762 ms  0.704 ms
+ 2  vl160.gw3.tor.egate.net (67.215.192.82)  1.508 ms  1.860 ms  2.188 ms
+ 3  216.235.0.73 (216.235.0.73)  1.409 ms  1.701 ms  1.526 ms
+ 4  vl502.ge-0-0-1.bdr2.tor.egate.net (216.235.0.165)  1.365 ms  1.846 ms  1.993 ms
+ 5  ge-1-1-0.407.bb4.yyz1.neutraldata.net (204.16.202.170)  2.371 ms  1.759 ms  1.793 ms
+ 6  80.150.169.65 (80.150.169.65)  6.622 ms
+    62.157.250.97 (62.157.250.97)  5.867 ms  3.823 ms
+ 7  nyc-sb3-i.NYC.US.NET.DTAG.DE (62.156.131.37)  18.033 ms  17.578 ms  19.488 ms
+ 8  192.205.34.181 (192.205.34.181)  18.593 ms  16.758 ms  19.684 ms
+ 9  cr1.n54ny.ip.att.net (12.122.131.102)  19.071 ms  19.918 ms  20.529 ms
+10  n54ny401me3.ip.att.net (12.122.131.169)  56.448 ms  15.688 ms  15.925 ms
+11  whitedwarf-t640.cbbtier3.att.net (12.89.5.14)  19.965 ms  20.768 ms  20.921 ms
+12  route-server.cbbtier3.att.net (12.0.1.28)  19.570 ms  18.735 ms  18.850 ms
+[monster:~]% 
+```
+
 ### Variable Quality of Reverse DNS
 
 Traceroute often displays [DNS](https://www.ietf.org/rfc/rfc1034.txt)
@@ -349,6 +389,27 @@ the name of a network operator, a city, a router type and perhaps
 even a router interface type (and hence interface capacity), all
 of which provides useful metadata missing from a bare address.
 
+In the following excerpt from traceroute output, we see a series
+of hops through Beanfield's network, starting in Toronto, then
+continuing to Calgary and Seattle. Beanfield use a particularly
+helpful reverse DNS scheme that allows us to see a path through 905
+King Street West (a Cologix data centre) and 151 Front Street West
+(the original Toronto central office, now a significant data centre
+facility) in Toronto, 7007 54th Street SE in Calgary (Flexential
+data centre) and 2001 6th Avenue in Seattle (the so-called Westin
+building).
+
+``` 6  be5.pe01.905KingStW01.YYZ.beanfield.com (72.15.49.31)  55.199 ms
+    be6.bfr01.905kingstw01.yyz.beanfield.com (72.15.49.28)  55.749 ms
+    be5.pe01.905KingStW01.YYZ.beanfield.com (72.15.49.31)  55.266 ms
+ 7  be8.bfr01.151FrontStW01.YYZ.beanfield.com (72.15.49.83)  53.870 ms
+    be4.bfr01.151FrontStW01.YYZ.beanfield.com (72.15.49.33)  55.579 ms
+    be8.bfr01.151FrontStW01.YYZ.beanfield.com (72.15.49.83)  54.992 ms
+ 8  te0-2.pe02.700754thStSE01.YYC.beanfield.com (72.15.49.34)  53.662 ms  54.838 ms  53.460 ms
+ 9  te0-0-25.pe01.700754thStSE01.YYC.beanfield.com (72.15.49.78)  55.591 ms  55.640 ms  54.156 ms
+10  te0-2-0-0.bdr01.20016thAv01.SEA.beanfield.com (72.15.49.40)  54.000 ms  54.009 ms  55.461 ms
+```
+
 However, with some notable exceptions principally related to the
 delivery of e-mail, the mapping of IP addresses to DNS names
 (so-called "reverse DNS") is not mandatory and doesn't really break
@@ -356,6 +417,29 @@ anything if it's missing or inaccurate. Whilst many network operators
 do a pretty good job at keeping their reverse DNS maintained, there
 are whole regions of the world that don't bother; Asia is an easy
 example.
+
+```[monster:~]% traceroute ns1.ac.lk.
+traceroute to ns1.ac.lk (192.248.1.162), 64 hops max, 40 byte packets
+ 1  h67-215-197-147.host.egate.net (67.215.197.147)  0.686 ms  0.717 ms  0.696 ms
+ 2  vl160.gw3.tor.egate.net (67.215.192.82)  0.967 ms  1.744 ms  2.217 ms
+ 3  216.235.0.73 (216.235.0.73)  1.515 ms  1.524 ms  1.767 ms
+ 4  vl502.ge-0-0-1.bdr2.tor.egate.net (216.235.0.165)  1.810 ms  1.453 ms  1.273 ms
+ 5  ge-1-1-0.407.bb4.yyz1.neutraldata.net (204.16.202.170)  1.377 ms  1.892 ms  4.287 ms
+ 6  toro-b1-link.telia.net (62.115.144.94)  2.994 ms  1.876 ms  3.814 ms
+ 7  nyk-bb4-link.telia.net (62.115.113.86)  13.951 ms  16.829 ms  15.601 ms
+ 8  prs-bb4-link.telia.net (80.91.251.101)  84.558 ms  84.182 ms  85.014 ms
+ 9  mei-b1-link.telia.net (62.115.124.215)  110.337 ms  110.166 ms  110.256 ms
+10  srilankatelecom-ic-131449-mei-b1.c.telia.net (62.115.49.126)  102.806 ms  104.112 ms  105.771 ms
+11  103.87.124.33 (103.87.124.33)  219.773 ms
+    103.87.124.41 (103.87.124.41)  216.444 ms
+    103.87.124.45 (103.87.124.45)  216.503 ms
+12  103.87.124.90 (103.87.124.90)  211.165 ms
+    103.87.124.218 (103.87.124.218)  211.938 ms
+    103.87.124.90 (103.87.124.90)  211.141 ms
+13  103.87.125.82 (103.87.125.82)  212.867 ms  218.508 ms  216.413 ms
+14  bera.learn.ac.lk (192.248.1.162)  216.694 ms  212.237 ms  217.036 ms
+[monster:~]% 
+```
 
 Network interconnects between autonomous systems also sometimes
 show signs of reverse DNS that are misleading; for example, a peering
@@ -366,3 +450,28 @@ Hence, although two addresses on such a link each refer to different
 routers operated by different network providers, the reverse DNS
 might suggest that both are operated by the same carrier.
 
+Reverse DNS is even more scarce in IPv6 networks than in IPv4. The
+mechanism by which IPv6 addresses are encoded into the namespace
+below IP6.ARPA is evidently too much for some network engineers.
+
+```[monster:~]% traceroute6 www.google.com
+traceroute6 to www.google.com (2607:f8b0:4000:80c::2004) from 2001:4900:1:392::158, 64 hops max, 12 byte packets
+ 1  2001:4900:1:392:219:e7ff:fe65:9b08  0.980 ms  3.613 ms  1.090 ms
+ 2  2001:4900:0:1::10:1  4.061 ms  1.701 ms  2.727 ms
+ 3  2001:4900:2:501::5  3.639 ms  3.676 ms  1.490 ms
+ 4  he.ip6.torontointernetxchange.net  1.628 ms  1.562 ms  1.523 ms
+ 5  google.torontointernetxchange.net  1.648 ms  2.745 ms  3.952 ms
+ 6  2001:4860:0:16::3  2.286 ms
+    2001:4860:0:11d6::3  2.233 ms
+    2001:4860:0:17::3  7.307 ms
+ 7  2001:4860::c:4000:d29f  14.792 ms  14.392 ms  16.832 ms
+ 8  2001:4860::8:4000:ca1a  35.261 ms  35.373 ms  35.886 ms
+ 9  2001:4860::c:4000:d8f6  36.377 ms  37.449 ms  83.290 ms
+10  2001:4860::1:0:c04d  36.900 ms
+    2001:4860::1:0:c6eb  35.428 ms  36.804 ms
+11  2001:4860:0:1::2787  35.296 ms
+    2001:4860:0:1::2785  36.837 ms  36.190 ms
+12  2001:4860:0:1::2787  35.530 ms  34.943 ms
+    dfw06s48-in-x04.1e100.net  37.070 ms
+[monster:~]% 
+```
