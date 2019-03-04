@@ -393,11 +393,15 @@ In the following excerpt from traceroute output, we see a series
 of hops through Beanfield's network, starting in Toronto, then
 continuing to Calgary and Seattle. Beanfield use a particularly
 helpful reverse DNS scheme that allows us to see a path through 905
-King Street West (a Cologix data centre) and 151 Front Street West
-(the original Toronto central office, now a significant data centre
-facility) in Toronto, 7007 54th Street SE in Calgary (Flexential
-data centre) and 2001 6th Avenue in Seattle (the so-called Westin
-building).
+King Street West (a [Cologix data
+centre](http://www.cologix.com/data-centers/toronto/)) and 151 Front
+Street West (the original Toronto central office, now a significant
+carrier hotel and the home of the [Toronto Internet
+Exchange](https://en.wikipedia.org/wiki/Toronto_Internet_Exchange)) in
+Toronto, 7007 54th Street SE in Calgary ([Flexential data
+centre](https://www.flexential.com/data-centers/canada/calgary-data-center))
+and 2001 6th Avenue in Seattle (the [Westin
+building](https://www.westinbldg.com)).
 
 ```
  6  be5.pe01.905KingStW01.YYZ.beanfield.com (72.15.49.31)  55.199 ms
