@@ -198,11 +198,71 @@ a trip across a control bus and a spin around a CPU frequently
 rate-limit the number of such responses that can generated, which
 can result in response queueing delays or dropped responses.
 
+Individual latency measurements can be inflated by transient network
+conditions, which provides the motivation for the observed behaviour
+of many traceroute implementations to send multiple probe packets
+for each hop so that outliers can be more readily identified.
+
+On a path with no asymmetric routing effects, processing delay can
+be identified by a spike in latency measurements that is not observed
+in subsequent hops.
+
 ### Asymmetric Paths
 
-### Autonomous System Boundaries
+Routing on the Internet is asymmetric -- that is, in general, the path
+across the network from a source A to a destination B is not the same
+as the path from B to A. IP routing is only concerned with destination
+addresses, not source addresses.
 
-### Equal-Cost Multi-Path Routing
+Since latency measurements in traceroute are of the whole round-trip, and
+since traceroute only shows you the outbound path and not the return,
+the numbers observed in traceroute can be misleading. 
+
+Whilst an asymmetric return path within a single autonomous system
+might not introduce significantly different delay than the forward
+path, an autonomous system boundary represents a potentially more
+dramatic change in routing policy and topology. For example, a
+forward path that routes from a host in Toronto to a target in
+Vancover via Chicago and Seattle might have a correspionding return
+path via San Jose and Ashburn, Virginia from routers west of Chicago.
+Observed latency would increase significantly on the forward path
+after Chicago which might be interpreted as congestion, when in
+fact the increased path distance on the returb path is the real
+cause, due to a different routing policy in the provider interconnecting
+in Chicago.
+
+### Equal-Cost Multi-Path (ECMP) Routing
+
+Capacity between routers can be expanded by choosing transmission
+networks that provide greater bandwidth, e.g. by upgrading from a
+10Gbit/s STM-64 (OC-192 in SONET) interface to a 40Gbit/s STM-256
+(OC-768). However, an alternative approach is to combine multiple
+lower-speed interfaces in order to provide integer multiples of
+capacity, perhaps to avoid the cost of new higher-speed interfaces.
+
+In some cases intefaces can be combined to provide a single interface
+at the IP layer, e.g. using [multilink
+PPP](https://tools.ietf.org/rfc/rfc1990.txt) or using ethernet
+802.1AX Link Aggregation. In other cases multiple, parallel IP-layer
+connections between adjacent routers can be provisioned, relying
+upon equal-cost routes to share traffic across multiple candidate
+egress interfaces in each direction using some suitable heuristic.
+Flow hashing is often used to ensure that individual datagrams
+associated with a single transaction (a "flow") are constrained to
+a single link, e.g. to avoid packet reordering. The use of different
+transport-layer destination ports in traceroute can often cause
+successive probe packets to appear as distinct flows, meaning that
+different probe packets with the same TTLs can be carried over
+different links.
+
+Observing multiple different links at a particular hop in the output
+of traceroute is relatively easy to interpret; however, in some
+cases different equal-cost paths will have different path lengths,
+and in those cases the output can be confusing. The traceroute tool
+is generally not able to reassemble individual paths in those cases.
 
 ### Multi-Protocol Label Switching (MPLS)
+
+### Variable Quality of Reverse DNS
+
 
