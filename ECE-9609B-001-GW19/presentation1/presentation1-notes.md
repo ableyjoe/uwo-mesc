@@ -14,9 +14,33 @@ network operators at well-known, large carriers have been known to draw
 dubious conclusions from traceroute's output.
 
 This tutorial aims to illustrate that traceroute is not always as
-simple as it seems.
+simple as it seems by exploring a few common pitfalls and artifacts.
+It is by no means an exhaustive treatment.
 
 ## Overview
+
+### Application
+
+The purpose of traceroute is to map the path taken by a packet from
+one host on the Internet to another. Examples of why this might be
+useful include:
+
+* a network engineer wants to check the routing policy in a network
+in order to confirm that observed behaviour matches the intended design;
+* an end-user or a service provider wants to troubleshoot performance
+problems over the Internet in order to try and find a solution;
+* a white-hat security engineer wants to determine what information about
+a remote, private network can be discerned from a remote, untrusted
+network.
+
+In the context of this course, being able to map a remote network
+topology is fundamental to discovering addressing schemes, topologies
+and connected devices. In a more benign, diagnostic sense the ability
+of a host on an IP network to map the topology of the wider
+infrastructure in-band, without other sources of information, is
+an important reason why the Internet exists and why the popularity
+and sucess of IP as a protocol exceeded that of its rivals.
+
 
 ### History
 
@@ -263,6 +287,50 @@ is generally not able to reassemble individual paths in those cases.
 
 ### Multi-Protocol Label Switching (MPLS)
 
+[Multi-Protocol Label Switching
+(MPLS)](https://tools.ietf.org/rfc/rfc3031.txt) is an architectural
+approach to core network design that employs switching elements
+that forward based on a label rather than a destination address.
+Such cores can provide transport for protocols such as IP as an
+overlay for a small, high-performance packet core where individual
+routers do not require Internet-scale routing tables and are somewhat
+insulated from in-band communication from untrusted devices.
+
+A label-switched core router carrying a traceroute probe packet
+might decrease the TTL to zero but have no means to send an ICMP
+message back to its source. One solution to this problem is to
+tunnel the ICMP message through the MPLS core using the same label
+that was used to switch the corresponding probe packet. This approach
+ensures delivery of the ICMP message by a router in the correct
+routing domain, but has the side effect of elongating the path over
+which the ICMP response packet was sent. A traceroute over an MPLS
+core can produce strange-looking output where whole sections of the
+output have the same latency measurements reported.
+
 ### Variable Quality of Reverse DNS
 
+Traceroute often displays [DNS](https://www.ietf.org/rfc/rfc1034.txt)
+names as well as IP addresses in its output. This is very useful
+in interpreting traceroute's output, since names are generally more
+easily understood by humans than addresses. A DNS name might identify
+the name of a network operator, a city, a router type and perhaps
+even a router interface type (and hence interface capacity), all
+of which provides useful metadata missing from a bare address.
+
+However, with some notable exceptions principally related to the
+delivery of e-mail, the mapping of IP addresses to DNS names
+(so-called "reverse DNS") is not mandatory and doesn't really break
+anything if it's missing or inaccurate. Whilst many network operators
+do a pretty good job at keeping their reverse DNS maintained, there
+are whole regions of the world that don't bother; Asia is an easy
+example.
+
+Network interconnects between autonomous systems also sometimes
+show signs of reverse DNS that are misleading; for example, a peering
+circuit between two tier-2 providers is likely to have endpoints
+assigned by just one of the operators; that operator will also
+generally be responsible for the corresponding reverse DNS entries.
+Hence, although two addresses on such a link each refer to different
+routers operated by different network providers, the reverse DNS
+might suggest that both are operated by the same carrier.
 
