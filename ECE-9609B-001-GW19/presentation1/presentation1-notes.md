@@ -59,7 +59,7 @@ about similar functionality available in other protocols, such as
 [OSI](https://en.wikipedia.org/wiki/OSI_model), none of which are
 relevant at the time of writing for practical, large-scale networking.
 
-## Mechanism in IPv4
+## Unerlying Mechanism in IPv4
 
 Packet networks generally require protocol support to mitigate
 topological loops; if they did not, any network would be vulnerable
@@ -86,5 +86,76 @@ encapsulated within IP as protocol number 1. All ICMP packets include
 an 8-octet header that includes an 8-bit type and code fields; the
 particular type of message used in traceroute is type 11 code 0,
 indicating "TTL expired in transit".
+
+## Base Traceroute Algorithm
+
+Traceroute originates multiple probe packets towards a destination
+address with different values TTL in the outermost, encapsulating
+IP header. Probe packets with different TTL values will trigger
+ICMP messages from different routers along the path; each such ICMP
+message will be sourced from the router that generated it, allowing
+the originator of the probe packets to collect a list of router
+addresses along the path that together constitute the outbound path
+to the destination. The destination host to which probe packets
+were sent should ideally respond with some other response, indicating
+to the traceroute tool what range of TTL values encompass the path;
+once data has been collected from all intermediate routers (or when
+the tool has timed out waiting for responses) the results can be
+presented to the user.
+
+The elapsed time between the origination of a probe packet and the
+receipt of a response (of whatever kind) can be used to present
+a measure of round-trip latency for each hop in the results.
+
+## Variations in Implementation
+
+### Probe Protocol
+
+The original Van Jaconson implementation of traceroute used UDP
+datagrams as probe packets. These used a destination UDP port of
+33434, incrementing once for each successive probe. The terminal
+host is expected to respond to its probe packet with an ICMP type
+3 code 3 response, "Destination port unreachable"; 33434 was chosen
+as an arbitrary but (usually) ephemeral port number that most of
+the time you could rely on an application not to listen on.
+
+Windows `tracert.exe` has always used ICMP type 8 "Echo Request"
+probes, which are the mechanism used by the `ping(8)` utility. The
+destination host must respond with an ICMP type 0 "Echo Reply" in
+order to signal that the path has been fully traversed.
+
+Various traceroute implementations support multiple protocols,
+including TCP SYN probe packets, which can be useful to traverse
+firewalls; for example, a web server's HTTP endpoint might be
+reachable via a stateless packet filter that blocks UDP and ICMP
+type 8 probes, but can be expected to pass 80/tcp or 443/tcp SYN
+probes since they are relied upon for proper operation of HTTP using
+that protocol's [assigned well-known port
+number](https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml).
+
+### Multiple Probe Packets
+
+Most traceroute implementations originate multiple probe packets for
+each value of TTL; Van Jacobson traceroute sent three probes per
+hop.  Since the ICMP response packets preserve some of the payload
+from the discarded probe packets, the probe payloads can be used
+to provide further identification of the responses, e.g. allowing
+`traceroute(8)` on multi-user Unix systems to be run by multiple
+users at once with the same destination without confusing one user's
+probe packets with another. UDP and TCP destination port numbers
+allow further demuxing, as does the ICMP echo request sequence
+number field.
+
+### Asynchronous or Synchronous Origination of Probe Packets
+
+Van Jacobson traceroute sent probe packets in order, starting with
+TTL=1, and not continuing with larger TTL probes until data for the
+first one had been collected. Traceroute over a long path could
+hence take a noticeable amount of time to complete.
+
+Some other implementations send subsequent probe packets without
+delay, taking advantage of the payload and transport addresses
+identified in the responses to sort them and present a path regardless
+of the order in which they are received.
 
 
