@@ -375,6 +375,10 @@ which the ICMP response packet was sent. A traceroute over an MPLS
 core can produce strange-looking output where whole sections of the
 output have the same latency measurements reported.
 
+In the following example, the hops through AT&T's network are elongated
+in this fashion, and all show the same round-trip latency. There are
+better examples.
+
 ```[monster:~]% traceroute route-server.cbbtier3.att.net
 traceroute to route-server.cbbtier3.att.net (12.0.1.28), 64 hops max, 40 byte packets
  1  h67-215-197-147.host.egate.net (67.215.197.147)  0.991 ms  0.762 ms  0.704 ms
@@ -434,8 +438,8 @@ delivery of e-mail, the mapping of IP addresses to DNS names
 (so-called "reverse DNS") is not mandatory and doesn't really break
 anything if it's missing or inaccurate. Whilst many network operators
 do a pretty good job at keeping their reverse DNS maintained, there
-are whole regions of the world that don't bother; Asia is an easy
-example.
+are whole regions of the world that don't bother; Asia is a source
+of many examples, e.g. this path to a DNS server in Sri Lanka:
 
 ```[monster:~]% traceroute ns1.ac.lk.
 traceroute to ns1.ac.lk (192.248.1.162), 64 hops max, 40 byte packets
@@ -458,6 +462,29 @@ traceroute to ns1.ac.lk (192.248.1.162), 64 hops max, 40 byte packets
 13  103.87.125.82 (103.87.125.82)  212.867 ms  218.508 ms  216.413 ms
 14  bera.learn.ac.lk (192.248.1.162)  216.694 ms  212.237 ms  217.036 ms
 [monster:~]% 
+```
+
+An even more convenient example, it seems, is any path that starts
+on Western's network:
+
+```
+[anchovy:~]% traceroute 8.8.8.8
+traceroute to 8.8.8.8 (8.8.8.8), 64 hops max, 52 byte packets
+ 1  172.30.24.2 (172.30.24.2)  5.220 ms  2.137 ms  3.355 ms
+ 2  * * *
+ 3  199.71.2.113 (199.71.2.113)  15.734 ms  43.345 ms  58.058 ms
+ 4  66.97.23.73 (66.97.23.73)  20.568 ms  27.001 ms  18.270 ms
+ 5  66.97.16.17 (66.97.16.17)  16.620 ms  21.087 ms  22.535 ms
+ 6  66.97.16.22 (66.97.16.22)  26.343 ms  20.214 ms  20.134 ms
+ 7  74.125.48.230 (74.125.48.230)  12.485 ms  14.695 ms  12.050 ms
+ 8  74.125.244.161 (74.125.244.161)  9.274 ms
+    108.170.250.225 (108.170.250.225)  13.040 ms
+    74.125.244.145 (74.125.244.145)  15.828 ms
+ 9  108.170.227.37 (108.170.227.37)  15.830 ms
+    108.170.227.39 (108.170.227.39)  16.376 ms
+    108.170.227.37 (108.170.227.37)  19.743 ms
+10  google-public-dns-a.google.com (8.8.8.8)  12.160 ms  9.144 ms  8.984 ms
+[anchovy:~]% 
 ```
 
 Network interconnects between autonomous systems also sometimes
