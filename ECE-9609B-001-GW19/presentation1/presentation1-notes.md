@@ -41,7 +41,6 @@ infrastructure in-band, without other sources of information, is
 an important reason why the Internet exists and why the popularity
 and sucess of IP as a protocol exceeded that of its rivals.
 
-
 ### History
 
 Traceroute is a tool originally written by [Van
@@ -207,6 +206,25 @@ delay, taking advantage of the payload and transport addresses
 identified in the responses to sort them and present a path regardless
 of the order in which they are received.
 
+The traceroute implementation mtr ("Matt's Traceroute") supports
+multiple probe protocols, asynchronous origination and configurable
+numbers of probe packets per hop, shown here with ASCII output and
+ping measurements to each intermediate hop with mean, minimum,
+maximum and standard deviation of observed round-trip latency.
+
+```[octopus:~]% mtr --report --report-cycles 5 --tcp -P 80 www.microsoft.com
+Start: 2019-03-04T00:48:25-0500
+HOST: octopus.hopcount.ca         Loss%   Snt   Last   Avg  Best  Wrst StDev
+  1.|-- gateway                    0.0%     5    1.9   1.3   1.2   1.9   0.3
+  2.|-- ???                       100.0     5    0.0   0.0   0.0   0.0   0.0
+  3.|-- 104-195-128-74.cpe.teksav 20.0%     5   25.1  19.9  15.3  25.1   4.4
+  4.|-- ae3-119-agg01-tor.teksavv  0.0%     5   14.3  16.9  14.3  22.8   3.4
+  5.|-- ae4-0-bdr01-tor.teksavvy.  0.0%     5   24.1  29.9  19.2  51.6  13.7
+  6.|-- akamai.ip4.torontointerne  0.0%     5   20.6  25.7  15.3  37.7   9.1
+  7.|-- a104-68-229-123.deploy.st  0.0%     5    9.9  17.0   9.9  27.4   8.2
+[octopus:~]% 
+```
+
 ## Practical Considerations
 
 ### Round-Trip Latency
@@ -284,8 +302,6 @@ information makes the network engineer's life simple since it
 includes path information in both directions; so easy, in fact, it
 never happens in real life.
 
-
-
 ### Equal-Cost Multi-Path (ECMP) Routing
 
 Capacity between routers can be expanded by choosing transmission
@@ -336,8 +352,6 @@ traceroute to monster.hopcount.ca (67.215.197.158), 64 hops max, 52 byte packets
     monster (67.215.197.158)  31.007 ms
 [octopus:~]%
 ```
-
-
 
 ### Multi-Protocol Label Switching (MPLS)
 
