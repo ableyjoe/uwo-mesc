@@ -121,13 +121,14 @@ discussion.
 
 A stub resolver is generally implemented as a library in an operating
 system (or in applications that have OS-scale aspirations, like
-some web browsers). It provides an API to dependent software that
-provides name resolution, and achieves that resolution by sending
-queries towards recursive resolvers. The choice of recursive resolver
-to which queries should be sent is usually configurable, either
-manually by a user or automatically using the provisioning capabiltiies
-of protocols such as [PPP](https://tools.ietf.org/rfc/rfc1661.txt)
-and [DHCP](https://tools.ietf.org/rfc/rfc2131.txt).
+[some web browsers](https://www.google.com/chrome/). It provides
+an API to dependent software that provides name resolution, and
+achieves that resolution by sending queries towards recursive
+resolvers. The choice of recursive resolver to which queries should
+be sent is usually configurable, either manually by a user or
+automatically using the provisioning capabiltiies of protocols such
+as [PPP](https://tools.ietf.org/rfc/rfc1661.txt) and
+[DHCP](https://tools.ietf.org/rfc/rfc2131.txt).
 
 A so-called recursive resolver receives a query from a stub resolver
 and attempts to gather all the information it needs in order to formulate
