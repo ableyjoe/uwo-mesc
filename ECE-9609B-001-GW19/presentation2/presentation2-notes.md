@@ -26,6 +26,16 @@ exploit.
 
 ## The DNS Protocol
 
+Some appreciation for the technical details of the DNS protocol are
+required in order to understand the mechanism and impact of the
+Kaminsky attack. An attempt to describe the important components
+of the protocol in words follows; [many other treatments are
+available](https://google.com/?q=dns+tutorial). It is perhaps worth
+noting that the DNS is awash with inconsistent terminology and
+disressingly-inconsistent use of jargon, a problem that has only recently
+[begun to be addressed](https://tools.ietf.org/rfc/rfc8499.txt) in
+the [IETF](https://ietf.org).
+
 ### History
 
 The DNS Protocol is old, the [original
@@ -78,7 +88,9 @@ complication](https://tools.ietf.org/rfc/rfc5890.txt); however, for
 the purposes of this description the existence of U-Labels can be
 safely ignored and A-Labels treated as any other US-ASCII DNS label.
 
-Convenient examples of DNS names are WHISPERLAB.ORG and WWW.ENG.UWO.CA.
+Domain names are case-insensitive in US-ASCII (and complicated in
+other scripts). Convenient examples of DNS names are WHISPERLAB.ORG
+and ENG.UWO.CA.
 
 ### Resource Records
 
@@ -117,13 +129,53 @@ manually by a user or automatically using the provisioning capabiltiies
 of protocols such as [PPP](https://tools.ietf.org/rfc/rfc1661.txt)
 and [DHCP](https://tools.ietf.org/rfc/rfc2131.txt).
 
+A so-called recursive resolver receives a query from a stub resolver
+and attempts to gather all the information it needs in order to formulate
+a response to return. Some information may be found in a local cache,
+populated from the results of earlier searching. In the case of a cache
+miss, the recursive resolver follows an interative process of sending
+queries with the same (QNAME, QCLASS, QTYPE) tuple as that received
+to authoritative DNS servers. The choice of authoritative server is
+generally that which is known to be responsible for the closest
+enclosing domain name corresponding to the QNAME; that information is
+obtained from the local cache. If no such information is locally available,
+the query will be sent to one of thirteen so-called root servers.
+
+Many, many authoritative servers are deployed on the Internet, each
+responsible for a number of DNS zones. A DNS zone is an internally-
+connected subset of the overall DNS namespace that is under uniform
+administrative control. Zones are linked with delegations, which
+are implemented with NS records.
+
+Absent any configuration errors in any part of the system, an
+authoriative DNS server will either respond with an authoritative
+answer to the query received from a recursive resolver, if it is
+authoritative for an enclosing zone, or will return a referral to
+another authoritative server, in particular one authoritative for
+a more closely-enclosing but superordinate zone to the QNAME.
+
+For example, suppose a DNS resolver needs to resolve the query
+(ENG.UWO.CA, IN, A) -- that is, obtain the A record and corresponding
+RDATA corresponding to the domain name ENG.UWO.CA. The A RRTYPE is
+used to encode IPv4 addreses.
+
+A recursive resolver with an empty cache will first send a query
+to a root server, which will result in a referral to a CA server.
+A second query to a CA server will result in a referral to a UWO.CA
+server, and a third query to a UWO.CA server will result in a query
+to an ENG.UWO.CA server, which will provide an answer. The intermediate
+records obtained during this process will all be cached for periods
+determined by the respective zone administrators, and subsequent
+queries, identical or similar, can take advantage of that locally-cached
+information.
+
 In the DNS protocol, a DNS query is characterised by a domain name 
 (QNAME), a class (QCLASS) and an RRTYPE. At a high level, the DNS
 can be considered a key-value store with a key represented as a 
 (QNAME, QCLASS, QTYPE) tuple and the value returned (if available)
 as RTYPE-specific RDATA.
 
-### The Glue that BINDs
+### Glue
 
 ## The Kaminsky Attack
 
