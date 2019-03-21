@@ -176,12 +176,20 @@ can be considered a key-value store with a key represented as a
 (QNAME, QCLASS, QTYPE) tuple and the value returned (if available)
 as RTYPE-specific RDATA.
 
+Queries and responses are carried over a variety of transport protocols,
+most commonly [UDP](https://tools.ietf.org/rfc/rfc768.txt). Queries
+are addressed at the UDP layer to the well-known UDP port number
+53, and incorporate a 16-bit QUERYID field in their headers to allow
+matching responses to queries on multi-user (or, really, multi-tasking)
+systems where multiple name resolution transactions may be in process
+simultaneously.
+
 The responses returned by the DNS protocol consist of four sections:
 
-- QUESTION, containing the (QNAME, QCLASS, QTYPE) tuple copied from the query;
-- ANSWER, containing authoritative information in response to the query;
-- AUTHORITY, containing information about the servers that are authoritative for the DNS zone pertinent to the response; and
-- ADDITIONAL, that contains other information.
+- A QUESTION section, containing the (QNAME, QCLASS, QTYPE) tuple copied from the query;
+- An ANSWER section, containing authoritative information in response to the query;
+- An AUTHORITY section, containing information about the servers that are authoritative for the DNS zone pertinent to the response; and
+- An ADDITIONAL section that contains other information.
 
 *The ADDITIONAL section is the interesting part of a DNS response
 for the purposes of understanding the Kaminsky attack.*
@@ -204,8 +212,8 @@ DNS data in the parent zone. Such data is included in the referral
 response from the parent nameservers, and is carried in the ADDITIIONAL
 section.
 
-The handling of ADDITIONAL section is central to the operation of
-the Kaminsky attack.
+*The handling of ADDITIONAL section is central to the operation of
+the Kaminsky attack.*
 
 
 ## The Kaminsky Attack
