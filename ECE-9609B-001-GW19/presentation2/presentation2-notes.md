@@ -35,4 +35,11 @@ well, considering that like many of its peer protocols it was
 motivated more on functionality than robustness, privacy or
 performance.
 
+## The Kaminsky Attack
+
+## Impact and Exploitation
+
+## Disclosure Process and Aftermath
+
+## Legacy
 
