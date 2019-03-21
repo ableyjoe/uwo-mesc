@@ -176,7 +176,37 @@ can be considered a key-value store with a key represented as a
 (QNAME, QCLASS, QTYPE) tuple and the value returned (if available)
 as RTYPE-specific RDATA.
 
+The responses returned by the DNS protocol consist of four sections:
+
+- QUESTION, containing the (QNAME, QCLASS, QTYPE) tuple copied from the query;
+- ANSWER, containing authoritative information in response to the query;
+- AUTHORITY, containing information about the servers that are authoritative for the DNS zone pertinent to the response; and
+- ADDITIONAL, that contains other information.
+
+*The ADDITIONAL section is the interesting part of a DNS response
+for the purposes of understanding the Kaminsky attack.*
+
 ### Glue
+
+The system of delegations and referrals between zones has an inherent
+bootstrapping problem. Referrals from a parent zone to a child
+include of a set of nameservers for the child zone, which are
+specified not by address but rather as DNS names. Resolving those
+nameserver names in order to send a wire-format query itself requires
+DNS resolution, which in many cases is not possible without other
+information. Consider for example the CLOUDFLARE.COM domain whose
+nameservers, NS1.CLOUDFLARE.COM through NS4.CLOUDFLARE.COM, resolution
+of which names to obtain addresses requires their own addresses to
+achieve.
+
+In practice this problem is avoided by the inclusion of non-authoritative
+DNS data in the parent zone. Such data is included in the referral
+response from the parent nameservers, and is carried in the ADDITIIONAL
+section.
+
+The handling of ADDITIONAL section is central to the operation of
+the Kaminsky attack.
+
 
 ## The Kaminsky Attack
 
