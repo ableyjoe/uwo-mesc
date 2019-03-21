@@ -1,11 +1,12 @@
-# CVE-2008-1447
+# CVE-2008-1447: The Kaminsky Attack
 
 ## Summary
 
 [CVE-2008-1447](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-1447)
-describes a protocol-level vulnerability in the DNS that was
-discovered by [Dan Kaminsky](https://en.wikipedia.org/wiki/Dan_Kaminsky)
-in 2008 and is colloquially known as the *Kamnisky Attack*.
+describes a protocol-level vulnerability in the Domain Name System
+(DNS) that was famously described by [Dan
+Kaminsky](https://en.wikipedia.org/wiki/Dan_Kaminsky) in 2008 and
+is colloquially known as the *Kamnisky Attack*.
 
 The vulnerability exploits a weakness in the DNS protocol that is
 exacerbated by particular implementation choices. The weakness had
@@ -25,6 +26,8 @@ exploit.
 
 ## The DNS Protocol
 
+### History
+
 The DNS Protocol is old, the [original
 specification](https://tools.ietf.org/rfc/rfc1034.txt) dating from
 1987, an age when network abuse was rare and [the Internet was
@@ -35,11 +38,63 @@ well, considering that like many of its peer protocols it was
 motivated more on functionality than robustness, privacy or
 performance.
 
+The original purpose of the DNS was to provide a scaleable way to
+map names to addresses used on the Internet in a way that was
+consistent with the distributed nature of the Internet as a network
+of networks. The DNS as specified by [Dr Paul
+Mockapetris](https://en.wikipedia.org/wiki/Paul_Mockapetris) was
+the successful conclusion to this work, a collaboration between
+many pioneers who communicated using the namedroppers mailing list,
+mediated over a long period by [Dr Jon
+Postel](https://en.wikipedia.org/wiki/Jon_Postel). The DNS protocol
+introduced many novel concepts and accommodated the publication and
+retrieval of many other data types beyond IP addresses.
+
+The DNS is commonly described in terms of three separate concepts:
+its namespace, the resource records that are attached to nodes in
+that namespace and the infrastructure on which the whole system is
+deployed.
+
+### Namespace
+
+The DNS uses a now-familiar, hierarchical namespace. Individual
+names consist of an ordered series of labels. The conventional
+notation is for those labels to be ordered, left to right, from
+least-significant to most-significant and separated by dot characters
+(ASCII 0x2E), significance relating to the hierarchy.
+
+Most-significant labels (at the right) are colloquially known as
+top-level domains (TLDs).
+
+The maximum length of a label is 63 octets, and the maximum length
+of a domain name is 255 octets.
+
+Domain names may be presented with labels in scripts other than
+US-ASCII.  In this case the representation of the label is known
+as a U-Label; U-Labels are encoded into a US-ASCII form for
+transmission between DNS clents and servers, known as A-Labels. The
+whole business of dealing with Unicode in the DNS is [fraught with
+complication](https://tools.ietf.org/rfc/rfc5890.txt); however, for
+the purposes of this description the existence of U-Labels can be
+safely ignored and A-Labels treated as any other US-ASCII DNS label.
+
+Convenient examples of DNS names are WHISPERLAB.ORG and WWW.ENG.UWO.CA.
+
+### Resource Records
+
+
+
+### Infrastructure
+
+### The Glue that BINDs
+
 ## The Kaminsky Attack
 
-## Impact and Exploitation
+### Key Insights
 
-## Disclosure Process and Aftermath
+### Impact and Exploitation
 
-## Legacy
+### Disclosure Process and Aftermath
+
+### Legacy
 
