@@ -204,21 +204,40 @@ nameserver names in order to send a wire-format query itself requires
 DNS resolution, which in many cases is not possible without other
 information. Consider for example the CLOUDFLARE.COM domain whose
 nameservers, NS1.CLOUDFLARE.COM through NS4.CLOUDFLARE.COM, resolution
-of which names to obtain addresses requires their own addresses to
-achieve.
+of which, in turn, requires their own addresses to be obtained.
 
 In practice this problem is avoided by the inclusion of non-authoritative
 DNS data in the parent zone. Such data is included in the referral
 response from the parent nameservers, and is carried in the ADDITIIONAL
 section.
 
-*The handling of ADDITIONAL section is central to the operation of
-the Kaminsky attack.*
+*The handling of the ADDITIONAL section is central to the operation
+of the Kaminsky attack.*
 
 
 ## The Kaminsky Attack
 
+The Kaminsky attack is a way for a remote attacker to insert
+incorrect, potentially malicious data into a DNS resolver's cache
+using mainly weaknesses in the protocol rather than defects in
+particular implementations. Since almost all other protocols depend
+upon the DNS and since the potential to be coerced into connecting
+to a rogue system across a network is more or less the definition
+of a network service vulnerability, this represents a broad base
+of risk for most services delivered over the Internet.
+
 ### Key Insights
+
+The Kaminsky attack depends upon a few key insights.
+
+1. The QUERYID field in the DNS header, used by DNS resolvers to match DNS responses to queries, is a 16-bit field. Collisions are consequently relatively easy to achieve with the network connectivity available in 2008. This was first pointed out by Bernstein in 1999.
+2. You don't need to attack just a target name; you can introduce data in a response using many, similar names in the same zone, since each one of them can be linked to the target name with RRTYPEs like NS and CNAME. This dispenses with a common reaction to Bernstein's original observation, that the attack window was limited by the period in which accurate data would persist in a cache, masking opportunities to continue the attack.
+3. There are an enormous number of ways of triggering a legitimate client of a DNS resolver to ask a particular question.
+4. Many resolver systems (in 2008) exhibited very predictable source-port selectoni for outbound DNS queries, making it simple to synthesise attack responses that would be accepted at the UDP layer.
+
+### Mechanism
+
+
 
 ### Impact and Exploitation
 
