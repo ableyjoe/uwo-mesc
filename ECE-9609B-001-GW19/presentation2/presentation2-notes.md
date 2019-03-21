@@ -191,9 +191,6 @@ The responses returned by the DNS protocol consist of four sections:
 - An AUTHORITY section, containing information about the servers that are authoritative for the DNS zone pertinent to the response; and
 - An ADDITIONAL section that contains other information.
 
-*The ADDITIONAL section is the interesting part of a DNS response
-for the purposes of understanding the Kaminsky attack.*
-
 ### Glue
 
 The system of delegations and referrals between zones has an inherent
@@ -208,12 +205,14 @@ of which, in turn, requires their own addresses to be obtained.
 
 In practice this problem is avoided by the inclusion of non-authoritative
 DNS data in the parent zone. Such data is included in the referral
-response from the parent nameservers, and is carried in the ADDITIIONAL
+response from the parent nameservers, and is carried in the ADDITIONAL
 section.
 
-*The handling of the ADDITIONAL section is central to the operation
-of the Kaminsky attack.*
-
+Records in the ADDITIONAL section of a response are not authoritative,
+which is why they don't appear in the ANSWER section. However, practical
+operation of the protocol requires them to be cached under certain
+circumstances, and many implementations are more liberal than that in
+retaining such data.
 
 ## The Kaminsky Attack
 
@@ -237,11 +236,21 @@ The Kaminsky attack depends upon a few key insights.
 
 ### Mechanism
 
+There are many nuances to the mechanisms proposed by Kaminsky and his various
+collaborators, but the principal mechanism is as follows:
 
+1. Trigger an end-system to look up a non-existent name in a target DNS zone using a target resolver. For open resolvers this can be done directly; for resolvers with access restrictions, end-systems can be triggered into doing DNS lookups by feeding them embedded objects in e-mail messages and web pages, or in a variety of other mechanisms. For a particular DNS name to be a viable target it has to be used; triggering that use amongst a large community of end-users is a relatively simple problem.
+2. Craft a DNS response to the query that includes by reference the target DNS domain name, e.g. by returning the target name and associated poisioned RDATA as a CNAME or NS target to queried name.
+3. Flood the resolver with DNS responses using a variety of QUERYIDs and source ports, guided by observed behaviour at real authoritatve servers under the control of the attacker.
+
+With the the low entropy available with predictable source port selection
+on queries and the narrow QUERYID field, Kaminsky was able to demonstrate
+insertion of arbitrary data into DNS caches in around ten seconds, using
+commodity hardware and network infrastructure.
 
 ### Impact and Exploitation
 
-### Disclosure Process and Aftermath
+### Mitigation
 
 ### Legacy
 
