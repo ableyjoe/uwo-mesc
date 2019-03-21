@@ -82,9 +82,46 @@ Convenient examples of DNS names are WHISPERLAB.ORG and WWW.ENG.UWO.CA.
 
 ### Resource Records
 
+The DNS allows a variety of data structures to be published and
+retrieved beyond the IP addresses that provided its original
+motivation. Each resource record is represented on the wire with a
+[unique code-point](https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-4), the RRTYPE and each is attached to a data
+structure, the RDATA, that is (in general) RRTYPE-specific.
 
+Some RRTYPEs require special handling by the DNS protocol, such as
+NS which is used for zone cuts (delegations and referrals, the
+mechanisms by which different administrative zones of the namespace
+are connected) and CNAME, *canonical name*, which provides a
+redirectioni function. The majority of assigned code-points are for
+RRTYPEs that are handled consistently, however.
+
+The DNS accommodates multiple classes, each of which can in principal
+have a unique set of RRTYPEs available for use. In practice, only
+one class is widely used, known as IN (for *internet*).
 
 ### Infrastructure
+
+The infrastructure deployed to faclitate the publication and retrieval
+of data in and from the DNS consists principally of authoritative
+nameservers, recursive resolvers and stub resolvers. This is a
+limited and incomplete taxonomy, but it is sufficient for this
+discussion.
+
+A stub resolver is generally implemented as a library in an operating
+system (or in applications that have OS-scale aspirations, like
+some web browsers). It provides an API to dependent software that
+provides name resolution, and achieves that resolution by sending
+queries towards recursive resolvers. The choice of recursive resolver
+to which queries should be sent is usually configurable, either
+manually by a user or automatically using the provisioning capabiltiies
+of protocols such as [PPP](https://tools.ietf.org/rfc/rfc1661.txt)
+and [DHCP](https://tools.ietf.org/rfc/rfc2131.txt).
+
+In the DNS protocol, a DNS query is characterised by a domain name 
+(QNAME), a class (QCLASS) and an RRTYPE. At a high level, the DNS
+can be considered a key-value store with a key represented as a 
+(QNAME, QCLASS, QTYPE) tuple and the value returned (if available)
+as RTYPE-specific RDATA.
 
 ### The Glue that BINDs
 
