@@ -360,6 +360,8 @@ between three separate organisations at the time, all of whom
 generally took a conservative approach to change, and especially
 with reference to a system as critical as the global DNS.
 
+![Growth in Signed TLDs over Time](tld-dnssec-growth.png)
+
 The global response to the Kaminsky disclosure in the technical
 community provided the political impetus required for the deployment
 of DNSSEC in the root zone, a project that ultimately concluded in
