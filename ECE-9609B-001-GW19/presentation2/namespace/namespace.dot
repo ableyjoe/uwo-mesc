@@ -1,0 +1,20 @@
+digraph G {
+  root -> org -> whisperlaborg -> wwwwhisperlaborg;
+  org -> pirorg -> wwwpirorg;
+  root -> ca -> uwoca -> wwwuwoca;
+  uwoca -> enguwoca -> wwwenguwoca;
+
+  org [label = "org"];
+  whisperlaborg [label = "whisperlab.org"];
+  wwwwhisperlaborg [label = "www.whisperlab.org"];
+
+  pirorg [label = "pir.org"];
+  wwwpirorg [label = "www.pir.org"];
+
+  ca [label = "ca"];
+  uwoca [label = "uwo.ca"];
+  wwwuwoca [label = "www.uwo.ca"];
+  enguwoca [label = "eng.uwo.ca"];
+  wwwenguwoca [label = "www.eng.uwo.ca"];
+}
+
