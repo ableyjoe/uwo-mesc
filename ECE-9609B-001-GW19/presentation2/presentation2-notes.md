@@ -330,10 +330,42 @@ QNAME in a random pattern and requiring responses to match, taking
 advantage of the specification that DNS A-Labels are case-insensitive.
 However, some authoritative server implementations were found not
 to preserve the case of queries on legitimate replies, such behavioiur
-not being required by the specification, and hence the mechanism
-did not become widely adopted.
-
-
+not being required by the specification; the mechanism did not see
+widespread adoption.
 
 #### DNSSEC Deployment
+
+[DNSSEC](https://www.ietf.org/rfc/rfc4033.txt) is a set of extensions
+to the DNS which allow zone publishers to include cryptographic
+signatures alongsde the existing RRSets in DNS zones, with a chain
+of trust provided by signatures over new "delegation signer" records
+by parent zone keys that act as secure introductions to the
+corresponding keys in child zones.
+
+Only a small handful of top-level domains had been signed in 2008,
+and in particular the lack of a single trust anchor to allow DNSSEC
+validation across the whole DNS namespace was not possible without
+a signed root zone. The root zone was managed by a partnership
+between three separate organisations at the time, all of whom
+generally took a conservative approach to change, and especially
+with reference to a system as critical as the global DNS.
+
+![Global DNSSEC Deployment](global-dnssec-deployment.png)
+
+The global response to the Kaminsky disclosure in the technical
+communitiy provided the political impetus required for the deployment
+of DNSSEC in the root zone, a project that ultimately concluded in
+2010 as a partnership between [ICANN](https://icann.org),
+[VeriSign](https://verisign.com) and the [US Department of Commerce
+National Telecommunications and Information Administration
+(NTIA)](https://ntia.doc.gov). At the time of writing most TLDs
+have been signed and a [significant proportion of DNS queries are
+subject to
+validation](https://stats.labs.apnic.net/dnssec/XA?c=XA&x=1&g=1&r=1&w=7&g=0).
+The final, hurried touches to this presentation are actually being
+made from the offices of [NiRA](https://nira.org.ng) in Lagos,
+Nigeria, following [a
+workshop](https://nsrc.org/workshops/2019/nira-nsrc-icann-dnssec/)
+intended to support the deployment of DNSSEC in the NG (Nigerian)
+top-level domain.
 
