@@ -360,15 +360,22 @@ between three separate organisations at the time, all of whom
 generally took a conservative approach to change, and especially
 with reference to a system as critical as the global DNS.
 
-![Global DNSSEC Deployment](global-dnssec-deployment.png)
-
 The global response to the Kaminsky disclosure in the technical
 community provided the political impetus required for the deployment
 of DNSSEC in the root zone, a project that ultimately concluded in
 2010 as a partnership between [ICANN](https://icann.org),
 [VeriSign](https://verisign.com) and the [US Department of Commerce
 National Telecommunications and Information Administration
-(NTIA)](https://ntia.doc.gov). At the time of writing most TLDs
+(NTIA)](https://ntia.doc.gov). The first root zone key ceremony,
+at which the first DNSSEC key pair and signatures were generated
+for use in the root zone, Dan Kaminsky was enrolled as an inaugural
+Trusted Community Representative, retaining a key-share of the
+System Master Key used to encrypt a backup of the Root Zone Key
+Signing Key to be kept in secure storage for disaster recovery.
+
+![Global DNSSEC Deployment](global-dnssec-deployment.png)
+
+At the time of writing most TLDs
 have been signed and a [significant proportion of DNS queries are
 subject to
 validation](https://stats.labs.apnic.net/dnssec/XA?c=XA&x=1&g=1&r=1&w=7&g=0).
