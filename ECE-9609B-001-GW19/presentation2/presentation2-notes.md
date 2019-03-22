@@ -37,7 +37,7 @@ disressingly-inconsistent use of jargon, a problem that has only recently
 the [IETF](https://ietf.org).
 
 Readers already familiar with the technical details of the DNS protocol
-should [skip ahead][The Kaminsky Attack].
+should [feel free to skip ahead](#the-kaminsky-attack).
 
 ### History
 
