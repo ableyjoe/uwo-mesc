@@ -86,7 +86,7 @@ top-level domains (TLDs).
 The maximum length of a label is 63 octets, and the maximum length
 of a domain name is 255 octets.
 
-![DNS Namespace as a Tree Structure](namespace.jpg)
+![DNS Namespace as a Tree Structure](namespace/namespace.png)
 
 Domain names may be presented with labels in scripts other than
 US-ASCII.  In this case the representation of the label is known
@@ -98,8 +98,8 @@ the purposes of this description the existence of U-Labels can be
 safely ignored and A-Labels treated as any other US-ASCII DNS label.
 
 Domain names are case-insensitive in US-ASCII (and complicated in
-other scripts). Convenient examples of DNS names are WHISPERLAB.ORG
-and ENG.UWO.CA.
+other scripts). Convenient examples of DNS names are `WHISPERLAB.ORG`
+and `ENG.UWO.CA`.
 
 ### Resource Records
 
@@ -165,7 +165,7 @@ another authoritative server, in particular one authoritative for
 a more closely-enclosing but superordinate zone to the QNAME.
 
 For example, suppose a DNS resolver needs to resolve the query
-(ENG.UWO.CA, IN, A) -- that is, obtain the A record and corresponding
+(`ENG.UWO.CA`, `IN`, `A`) -- that is, obtain the A record and corresponding
 RDATA corresponding to the domain name ENG.UWO.CA. The A RRTYPE is
 used to encode IPv4 addreses.
 
