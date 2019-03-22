@@ -36,6 +36,9 @@ disressingly-inconsistent use of jargon, a problem that has only recently
 [begun to be addressed](https://tools.ietf.org/rfc/rfc8499.txt) in
 the [IETF](https://ietf.org).
 
+Readers already familiar with the technical details of the DNS protocol
+should [skip ahead][The Kaminsky Attack].
+
 ### History
 
 The DNS Protocol is old, the [original
@@ -191,7 +194,7 @@ The responses returned by the DNS protocol consist of four sections:
 - An AUTHORITY section, containing information about the servers that are authoritative for the DNS zone pertinent to the response; and
 - An ADDITIONAL section that contains other information.
 
-### Glue
+### Glue Records
 
 The system of delegations and referrals between zones has an inherent
 bootstrapping problem. Referrals from a parent zone to a child
