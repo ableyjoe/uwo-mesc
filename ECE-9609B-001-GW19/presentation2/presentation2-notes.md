@@ -165,15 +165,17 @@ another authoritative server, in particular one authoritative for
 a more closely-enclosing but superordinate zone to the QNAME.
 
 For example, suppose a DNS resolver needs to resolve the query
-(`ENG.UWO.CA`, `IN`, `A`) -- that is, obtain the A record and corresponding
-RDATA corresponding to the domain name ENG.UWO.CA. The A RRTYPE is
-used to encode IPv4 addreses.
+(`WWW.ENG.UWO.CA`, `IN`, `A`) -- that is, obtain the A record and
+corresponding RDATA corresponding to the domain name `WWW.ENG.UWO.CA`.
+The A RRTYPE is used to encode IPv4 addreses.
+
+![A Recursive Query][query/query.png]
 
 A recursive resolver with an empty cache will first send a query
-to a root server, which will result in a referral to a CA server.
-A second query to a CA server will result in a referral to a UWO.CA
+to a root server, which will result in a referral to a `CA` server.
+A second query to a `CA` server will result in a referral to a `UWO.CA`
 server, and a third query to a UWO.CA server will result in a query
-to an ENG.UWO.CA server, which will provide an answer. The intermediate
+to an `ENG.UWO.CA` server, which will provide an answer. The intermediate
 records obtained during this process will all be cached for periods
 determined by the respective zone administrators, and subsequent
 queries, identical or similar, can take advantage of that locally-cached
