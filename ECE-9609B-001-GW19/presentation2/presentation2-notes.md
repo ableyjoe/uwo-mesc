@@ -8,7 +8,7 @@ describes a protocol-level vulnerability in the Domain Name System
 Kaminsky](https://en.wikipedia.org/wiki/Dan_Kaminsky) in 2008 and
 is colloquially known as the *Kamnisky Attack*.
 
-![Dan Kaminsky](kaminsky.jpg) ![Dan Bernstein](bernstein.jpg)
+![Dan Kaminsky](kaminsky.jpg)
 
 The vulnerability exploits a weakness in the DNS protocol that is
 exacerbated by particular implementation choices. The weakness had
@@ -53,7 +53,7 @@ well, considering that like many of its peer protocols it was
 motivated more on functionality than robustness, privacy or
 performance.
 
-![Dr Paul Mockapetris](mockapetris.jpg) ![Dr Jon Postel](postel.jpg)
+![Dr Paul Mockapetris](mockapetris.jpg)
 
 The original purpose of the DNS was to provide a scaleable way to
 map names to addresses used on the Internet in a way that was
@@ -85,6 +85,8 @@ top-level domains (TLDs).
 
 The maximum length of a label is 63 octets, and the maximum length
 of a domain name is 255 octets.
+
+![DNS Namespace as a Tree Structure](namespace.jpg)
 
 Domain names may be presented with labels in scripts other than
 US-ASCII.  In this case the representation of the label is known
