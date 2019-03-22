@@ -285,7 +285,55 @@ possible with modest hardware in low tens of seconds.
 
 ### Impact and Exploitation
 
+Kaminsky reported in his [presentation at BlackHat
+2008](https://www.blackhat.com/presentations/bh-dc-09/Kaminsky/BlackHat-DC-09-Kaminsky-DNS-Critical-Infrastructure.pdf)
+that there had been significant exploitation of this vulnerability
+observed in the real world. Dagon *et al* reported that they had
+detected a poisoning event in 1 to 3% of the unpatched servers they
+monitored, and that phishing attacks incorporating this mechanism
+had also been observed.
+
+However, the response by the DNS vendor and operator community was
+swift and effective. Kaminsky reported a 66% patch rate (measured
+by server) within a month of disclosure, a rate that would be have
+been significantly higher if measured by end-user, since resolvers
+with significant end-user populations were subject to considerably
+higher attention than those that handled less traffic.
+
 ### Mitigation
 
-### Legacy
+Many mitigation techniques were proposed, some of which focused on
+tightening the algorithms for processing CNAME and NS targets and
+the processing of ADDITIONAL section glue by a resolver. However,
+the two principal avenues for mitigationi were (a) increasing the
+avalable entropy in outbound queries, making it harder to spoof
+responses and (b) the deployment of DNSSEC as a cache-protection
+mechanism.
+
+#### Query Entropy
+
+The importance of source-port randomisation in outbound queries had
+already been established at the time the vulnerability was disclosed,
+but many implementations did not randomise source ports effectively
+by default since doing so had a negative impact on query performance.
+Several widespread implemnentations subsequently changed their
+defaults, and various tools were promoted to allow end-users to
+check the observed source port randomisation of the resolvers they
+happened to be using, such as [this one from
+DNS-OARC](https://www.dns-oarc.net/oarc/services/dnsentropy).
+
+An [interesting
+proposal](https://tools.ietf.org/html/draft-vixie-dnsext-dns0x20-00) was
+made by [Paul Vixie](https://en.wikipedia.org/wiki/Paul_Vixie) which
+added entropy to a query by modulating the alphabetic case of the
+QNAME in a random pattern and requiring responses to match, taking
+advantage of the specification that DNS A-Labels are case-insensitive.
+However, some authoritative server implementations were found not
+to preserve the case of queries on legitimate replies, such behavioiur
+not being required by the specification, and hence the mechanism
+did not become widely adopted.
+
+
+
+#### DNSSEC Deployment
 
