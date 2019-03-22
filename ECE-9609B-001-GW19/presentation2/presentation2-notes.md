@@ -89,7 +89,7 @@ of a domain name is 255 octets.
 Domain names may be presented with labels in scripts other than
 US-ASCII.  In this case the representation of the label is known
 as a U-Label; U-Labels are encoded into a US-ASCII form for
-transmission between DNS clents and servers, known as A-Labels. The
+transmission between DNS clients and servers, known as A-Labels. The
 whole business of dealing with Unicode in the DNS is [fraught with
 complication](https://tools.ietf.org/rfc/rfc5890.txt); however, for
 the purposes of this description the existence of U-Labels can be
@@ -111,7 +111,7 @@ Some RRTYPEs require special handling by the DNS protocol, such as
 NS which is used for zone cuts (delegations and referrals, the
 mechanisms by which different administrative zones of the namespace
 are connected) and CNAME, *canonical name*, which provides a
-redirectioni function. The majority of assigned code-points are for
+redirection function. The majority of assigned code-points are for
 RRTYPEs that are handled consistently, however.
 
 The DNS accommodates multiple classes, each of which can in principal
@@ -120,7 +120,7 @@ one class is widely used, known as IN (for *internet*).
 
 ### Infrastructure
 
-The infrastructure deployed to faclitate the publication and retrieval
+The infrastructure deployed to facilitate the publication and retrieval
 of data in and from the DNS consists principally of authoritative
 nameservers, recursive resolvers and stub resolvers. This is a
 limited and incomplete taxonomy, but it is sufficient for this
@@ -133,7 +133,7 @@ an API to dependent software that provides name resolution, and
 achieves that resolution by sending queries towards recursive
 resolvers. The choice of recursive resolver to which queries should
 be sent is usually configurable, either manually by a user or
-automatically using the provisioning capabiltiies of protocols such
+automatically using the provisioning capabilities of protocols such
 as [PPP](https://tools.ietf.org/rfc/rfc1661.txt) and
 [DHCP](https://tools.ietf.org/rfc/rfc2131.txt).
 
@@ -141,7 +141,7 @@ A so-called recursive resolver receives a query from a stub resolver
 and attempts to gather all the information it needs in order to formulate
 a response to return. Some information may be found in a local cache,
 populated from the results of earlier searching. In the case of a cache
-miss, the recursive resolver follows an interative process of sending
+miss, the recursive resolver follows an iterative process of sending
 queries with the same (QNAME, QCLASS, QTYPE) tuple as that received
 to authoritative DNS servers. The choice of authoritative server is
 generally that which is known to be responsible for the closest
@@ -156,7 +156,7 @@ administrative control. Zones are linked with delegations, which
 are implemented with NS records.
 
 Absent any configuration errors in any part of the system, an
-authoriative DNS server will either respond with an authoritative
+authoritative DNS server will either respond with an authoritative
 answer to the query received from a recursive resolver, if it is
 authoritative for an enclosing zone, or will return a referral to
 another authoritative server, in particular one authoritative for
@@ -165,7 +165,7 @@ a more closely-enclosing but superordinate zone to the QNAME.
 For example, suppose a DNS resolver needs to resolve the query
 (`WWW.ENG.UWO.CA`, `IN`, `A`) -- that is, obtain the A record and
 corresponding RDATA corresponding to the domain name `WWW.ENG.UWO.CA`.
-The A RRTYPE is used to encode IPv4 addreses.
+The A RRTYPE is used to encode IPv4 addresses.
 
 ![A Recursive Query](query/query.png)
 
@@ -242,7 +242,7 @@ The Kaminsky attack depends upon a few key insights.
 1. The QUERYID field in the DNS header, used by DNS resolvers to match DNS responses to queries, is a 16-bit field. Collisions are consequently relatively easy to achieve with the network connectivity available in 2008. This problem was anticipated by Bernstein in 1999.
 2. You don't need to attack just a target name; you can introduce data in a response using many, similar names in the same zone, since each one of them can be linked to the target name with RRTYPEs like NS and CNAME. This dispenses with a common reaction to Bernstein's original observation, that the attack window was limited by the period in which accurate data would persist in a cache, masking opportunities to continue the attack.
 3. There are an enormous number of ways of triggering a legitimate client of a DNS resolver to ask a particular question, more in 2008 than 1999 due to the increase in number and sophistication of services and applications commonly used by end users.
-4. Many resolver systems (in 2008) exhibited very predictable source-port selectoni for outbound DNS queries, making it simple to synthesise attack responses that would be accepted at the UDP layer.
+4. Many resolver systems (in 2008) exhibited very predictable source-port selection for outbound DNS queries, making it simple to synthesise attack responses that would be accepted at the UDP layer.
 
 ### Mechanism
 
@@ -250,8 +250,8 @@ There are many nuances to the mechanisms proposed by Kaminsky and his various
 collaborators, but the principal mechanism is as follows:
 
 1. Trigger an end-system to look up a non-existent name in a target DNS zone using a target resolver. For open resolvers this can be done directly; for resolvers with access restrictions, end-systems can be triggered into doing DNS lookups by feeding them embedded objects in e-mail messages and web pages, or in a variety of other mechanisms. For a particular DNS name to be a viable target it has to be used; triggering that use amongst a large community of end-users is a relatively simple problem.
-2. Craft a DNS response to the query that includes by reference the target DNS domain name, e.g. by returning the target name and associated poisioned RDATA as a CNAME or NS target to queried name.
-3. Flood the resolver with DNS responses using a variety of QUERYIDs and source ports, guided by observed behaviour at real authoritatve servers under the control of the attacker.
+2. Craft a DNS response to the query that includes by reference the target DNS domain name, e.g. by returning the target name and associated poisoned RDATA as a CNAME or NS target to queried name.
+3. Flood the resolver with DNS responses using a variety of QUERYIDs and source ports, guided by observed behaviour at real authoritative servers under the control of the attacker.
 
 With the the low entropy available with predictable source port selection
 on queries and the narrow QUERYID field, Kaminsky was able to demonstrate
@@ -273,7 +273,7 @@ other applications for that name are answered from the cache with
 the attacker's response.
 
 In the event that the attack using `RANDOM123.WHISPERLAB.ORG` is not
-successful, the attakcer continues with other random labels until she
+successful, the attacker continues with other random labels until she
 succeeds. These attacks can take place in parallel to the extent that
 network bandwidth exists to carry the responses.
 
@@ -283,9 +283,9 @@ possible with modest hardware in low tens of seconds.
 
 ### Impact and Exploitation
 
-The ablity to subvert the DNS at will affords many opportunities
+The ability to subvert the DNS at will affords many opportunities
 to exploit systems that otherwise would be protected by higher-layer
-protocols or security perimeters. For example, the autnenticity
+protocols or security perimeters. For example, the authenticity
 protection of [TLS](https://tools.ietf.org/rfc/rfc8446.txt) relies
 upon a matching DNS name, not an address; signed certificates which
 will be treated as legitimate by all mainstream browsers are trivial
@@ -315,8 +315,8 @@ higher attention than those that handled less traffic.
 Many mitigation techniques were proposed, some of which focused on
 tightening the algorithms for processing CNAME and NS targets and
 the processing of ADDITIONAL section glue by a resolver. However,
-the two principal avenues for mitigationi were (a) increasing the
-avalable entropy in outbound queries, making it harder to spoof
+the two principal avenues for mitigation were (a) increasing the
+available entropy in outbound queries, making it harder to spoof
 responses and (b) the deployment of DNSSEC as a cache-protection
 mechanism.
 
@@ -326,7 +326,7 @@ The importance of source-port randomisation in outbound queries had
 already been established at the time the vulnerability was disclosed,
 but many implementations did not randomise source ports effectively
 by default since doing so had a negative impact on query performance.
-Several widespread implemnentations subsequently changed their
+Several widespread implementations subsequently changed their
 defaults, and various tools were promoted to allow end-users to
 check the observed source port randomisation of the resolvers they
 happened to be using, such as [this one from
@@ -339,7 +339,7 @@ added entropy to a query by modulating the alphabetic case of the
 QNAME in a random pattern and requiring responses to match, taking
 advantage of the specification that DNS A-Labels are case-insensitive.
 However, some authoritative server implementations were found not
-to preserve the case of queries on legitimate replies, such behavioiur
+to preserve the case of queries on legitimate replies, such behaviour
 not being required by the specification; the mechanism did not see
 widespread adoption.
 
@@ -347,7 +347,7 @@ widespread adoption.
 
 [DNSSEC](https://www.ietf.org/rfc/rfc4033.txt) is a set of extensions
 to the DNS which allow zone publishers to include cryptographic
-signatures alongsde the existing RRSets in DNS zones, with a chain
+signatures alongside the existing RRSets in DNS zones, with a chain
 of trust provided by signatures over new "delegation signer" records
 by parent zone keys that act as secure introductions to the
 corresponding keys in child zones.
@@ -363,7 +363,7 @@ with reference to a system as critical as the global DNS.
 ![Global DNSSEC Deployment](global-dnssec-deployment.png)
 
 The global response to the Kaminsky disclosure in the technical
-communitiy provided the political impetus required for the deployment
+community provided the political impetus required for the deployment
 of DNSSEC in the root zone, a project that ultimately concluded in
 2010 as a partnership between [ICANN](https://icann.org),
 [VeriSign](https://verisign.com) and the [US Department of Commerce
