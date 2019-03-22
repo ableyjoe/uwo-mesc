@@ -239,7 +239,7 @@ over the Internet.
 
 The Kaminsky attack depends upon a few key insights.
 
-1. The QUERYID field in the DNS header, used by DNS resolvers to match DNS responses to queries, is a 16-bit field. Collisions are consequently relatively easy to achieve with the network connectivity available in 2008. This was first pointed out by Bernstein in 1999.
+1. The QUERYID field in the DNS header, used by DNS resolvers to match DNS responses to queries, is a 16-bit field. Collisions are consequently relatively easy to achieve with the network connectivity available in 2008. This problem was anticipated by Bernstein in 1999.
 2. You don't need to attack just a target name; you can introduce data in a response using many, similar names in the same zone, since each one of them can be linked to the target name with RRTYPEs like NS and CNAME. This dispenses with a common reaction to Bernstein's original observation, that the attack window was limited by the period in which accurate data would persist in a cache, masking opportunities to continue the attack.
 3. There are an enormous number of ways of triggering a legitimate client of a DNS resolver to ask a particular question, more in 2008 than 1999 due to the increase in number and sophistication of services and applications commonly used by end users.
 4. Many resolver systems (in 2008) exhibited very predictable source-port selectoni for outbound DNS queries, making it simple to synthesise attack responses that would be accepted at the UDP layer.
@@ -282,6 +282,18 @@ especially predictable source port selection) has been shown to be
 possible with modest hardware in low tens of seconds.
 
 ### Impact and Exploitation
+
+The ablity to subvert the DNS at will affords many opportunities
+to exploit systems that otherwise would be protected by higher-layer
+protocols or security perimeters. For example, the autnenticity
+protection of [TLS](https://tools.ietf.org/rfc/rfc8446.txt) relies
+upon a matching DNS name, not an address; signed certificates which
+will be treated as legitimate by all mainstream browsers are trivial
+to obtain from commercial certificate authorities (or using automated
+protocols like [ACME](https://tools.ietf.org/rfc/rfc8555.txt), as
+implemented by [Let's Encrypt](https://letsencrypt.org).  Anything
+that relies upon TLS for protection is vulnerable to man-in-the-middle
+attacks if the DNS and server certificates can no longer be trusted.
 
 Kaminsky reported in his [presentation at BlackHat
 2008](https://www.blackhat.com/presentations/bh-dc-09/Kaminsky/BlackHat-DC-09-Kaminsky-DNS-Critical-Infrastructure.pdf)
