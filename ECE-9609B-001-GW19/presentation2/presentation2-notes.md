@@ -53,8 +53,6 @@ well, considering that like many of its peer protocols it was
 motivated more on functionality than robustness, privacy or
 performance.
 
-![Dr Paul Mockapetris](mockapetris.jpg)
-
 The original purpose of the DNS was to provide a scaleable way to
 map names to addresses used on the Internet in a way that was
 consistent with the distributed nature of the Internet as a network
