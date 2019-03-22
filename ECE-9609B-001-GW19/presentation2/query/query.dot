@@ -19,7 +19,7 @@ digraph G {
 
   recursive -> stub [style = bold, label = "answer", color = "purple"];
 
-  stub -> app [style = bold, lanbel = "answer", color = "purple"];
+  stub -> app [style = bold, label = "answer", color = "purple"];
 
   app [label = "application"];
   stub [label = "stub\nresolver"];
