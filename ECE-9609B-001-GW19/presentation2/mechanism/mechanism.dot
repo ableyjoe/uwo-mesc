@@ -1,0 +1,42 @@
+digraph G {
+  rankdir = LR;
+
+  { rank = same whisperlaborg attacker };
+
+  app -> stub [style = bold, label = "random001.whisperlab.org?", color = "orange"];
+
+  stub -> recursive [style = bold, label = "random123.whisperlab.org?", color = "orange"];
+
+  recursive -> whisperlaborg [style = bold, label = "random123.whisperlab.org?", color = "orange"];
+  whisperlaborg -> recursive [style = bold, label = "name error\n(ignored)", color = "purple"];
+
+  attacker -> recursive [ style = bold, label = "random123 CNAME www\nwww A 6.6.6.6", color = "red"];
+  attacker -> recursive [ style = bold, label = "random123 CNAME www\nwww A 6.6.6.6", color = "red"];
+  attacker -> recursive [ style = bold, label = "random123 CNAME www\nwww A 6.6.6.6", color = "red"];
+  attacker -> recursive [ style = bold, label = "random123 CNAME www\nwww A 6.6.6.6", color = "red"];
+  attacker -> recursive [ style = bold, label = "random123 CNAME www\nwww A 6.6.6.6", color = "red"];
+
+  recursive -> recursive [style = bold, label = "cache", color = "red"];
+
+  recursive -> stub [style = bold, label = "answer", color = "red"];
+
+  stub -> app [style = bold, label = "answer", color = "red"];
+
+  app2 -> stub2 [style = bold, label = "www.whisperlab.org?", color = "orange"];
+
+  stub2 -> recursive [style = bold, label = "www.whisperlab.org?", color = "orange"];
+  recursive -> stub2 [style = bold, label = "false answer", color = "red"];
+
+  stub2 -> app2 [ style = bold, label = "false answer", color = "red"];
+
+  app [label = "application"];
+  stub [label = "stub\nresolver"];
+  recursive [label = "recursive\nresolver"];
+
+  app2 [label = "application"];
+  stub2 [label = "stub\nresolver"];
+
+  whisperlaborg [label = "whisperlab.org\nserver"];
+  attacker [ label = "attacker"];
+}
+

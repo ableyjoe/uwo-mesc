@@ -260,6 +260,29 @@ on queries and the narrow QUERYID field, Kaminsky was able to demonstrate
 insertion of arbitrary data into DNS caches in around ten seconds, using
 commodity hardware and network infrastructure.
 
+![Example of attack](mechanism/mechanism.png)
+
+In the example above, an application is triggered into looking up
+the name `RANDOM123.WHISPERLAB.ORG`. An attacker bombards the target
+resolver with responses, exhausting the QUERYID space, perhaps
+guided by observed predictable source ports in the queries made by
+the resolver. The attacker's responses are crafted to match the
+triggered query from the application, but also include extra
+(cacheable) data for another name, `WWW.WHISPERLAB.ORG`. If the
+attack succeeds, the resolver's cache now contains the attacker's
+desired data for `WWW.WHISPERLAB.ORG` and subsequent queries from
+other applications for that name are answered from the cache with
+the attacker's response.
+
+In the event that the attack using `RANDOM123.WHISPERLAB.ORG` is not
+successful, the attakcer continues with other random labels until she
+succeeds. These attacks can take place in parallel to the extent that
+network bandwidth exists to carry the responses.
+
+Using this technique, reliable pollution of caches (even without
+especially predictable source port selection) has been shown to be
+possible with modest hardware in low tens of seconds.
+
 ### Impact and Exploitation
 
 ### Mitigation
