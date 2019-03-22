@@ -1,0 +1,33 @@
+digraph G {
+  rankdir = LR;
+
+  app -> stub [style = bold, label = "www.eng.uwo.ca?", color = "orange"];
+
+  stub -> recursive [style = bold, label = "www.eng.uwo.ca?", color = "orange"];
+
+  recursive -> root [style = bold, label = "www.eng.uwo.ca?", color = "orange"];
+  root -> recursive [style = bold, label = "referral to ca", color = "purple"];
+
+  recursive -> ca [style = bold, label = "www.eng.uwo.ca?", color = "orange"];
+  ca -> recursive [style = bold, label = "referral to uwo.ca", color = "purple"];
+
+  recursive -> uwoca [style = bold, label = "www.eng.uwo.ca?", color = "orange"];
+  uwoca -> recursive [style = bold, label = "referral to eng.uwo.ca", color = "purple"];
+
+  recursive -> enguwoca [style = bold, label = "www.eng.uwo.ca?", color = "orange"];
+  enguwoca -> recursive [style = bold, label = "answer", color = "purple"];
+
+  recursive -> stub [style = bold, label = "answer", color = "purple"];
+
+  stub -> app [style = bold, lanbel = "answer", color = "purple"];
+
+  app [label = "application"];
+  stub [label = "stub\nresolver"];
+  recursive [label = "recursive\nresolver"];
+
+  root [label = "root\nserver"];
+  ca [label = "ca\nserver"];
+  uwoca [label = "uwo.ca\nserver"];
+  enguwoca [label = "eng.uwo.ca\nserver"];
+}
+
