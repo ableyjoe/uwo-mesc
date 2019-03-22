@@ -169,7 +169,7 @@ For example, suppose a DNS resolver needs to resolve the query
 corresponding RDATA corresponding to the domain name `WWW.ENG.UWO.CA`.
 The A RRTYPE is used to encode IPv4 addreses.
 
-![A Recursive Query][query/query.png]
+![A Recursive Query](query/query.png)
 
 A recursive resolver with an empty cache will first send a query
 to a root server, which will result in a referral to a `CA` server.
