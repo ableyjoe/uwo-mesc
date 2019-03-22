@@ -8,6 +8,8 @@ describes a protocol-level vulnerability in the Domain Name System
 Kaminsky](https://en.wikipedia.org/wiki/Dan_Kaminsky) in 2008 and
 is colloquially known as the *Kamnisky Attack*.
 
+![Dan Kaminsky](kaminsky.jpg) ![Dan Bernstein](bernstein.jpg)
+
 The vulnerability exploits a weakness in the DNS protocol that is
 exacerbated by particular implementation choices. The weakness had
 been [observed](http://cr.yp.to/djbdns/forgery.html) by [Dr Daniel
@@ -51,7 +53,8 @@ well, considering that like many of its peer protocols it was
 motivated more on functionality than robustness, privacy or
 performance.
 
-![Dr Paul Mockapetris](mockapetris.jpg) ![Dr Jon Postel][postel.jpg]
+![Dr Paul Mockapetris](mockapetris.jpg) ![Dr Jon Postel](postel.jpg)
+
 The original purpose of the DNS was to provide a scaleable way to
 map names to addresses used on the Internet in a way that was
 consistent with the distributed nature of the Internet as a network
