@@ -32,9 +32,9 @@ Kaminsky attack. An attempt to describe the important components
 of the protocol in words follows; [many other treatments are
 available](https://google.com/?q=dns+tutorial). It is perhaps worth
 noting that the DNS is awash with inconsistent terminology and
-disressingly-inconsistent use of jargon, a problem that has only recently
-[begun to be addressed](https://tools.ietf.org/rfc/rfc8499.txt) in
-the [IETF](https://ietf.org).
+disressingly-inconsistent use of jargon, a problem that has only
+recently [begun to be addressed](https://tools.ietf.org/rfc/rfc8499.txt)
+in the [IETF](https://ietf.org).
 
 Readers already familiar with the technical details of the DNS protocol
 should [feel free to skip ahead](#the-kaminsky-attack).
@@ -51,6 +51,7 @@ well, considering that like many of its peer protocols it was
 motivated more on functionality than robustness, privacy or
 performance.
 
+![Dr Paul Mockapetris](mockapetris.jpg) ![Dr Jon Postel][postel.jpg]
 The original purpose of the DNS was to provide a scaleable way to
 map names to addresses used on the Internet in a way that was
 consistent with the distributed nature of the Internet as a network
@@ -220,13 +221,14 @@ retaining such data.
 ## The Kaminsky Attack
 
 The Kaminsky attack is a way for a remote attacker to insert
-incorrect, potentially malicious data into a DNS resolver's cache
+incorrect, potentially-malicious data into a DNS resolver's cache
 using mainly weaknesses in the protocol rather than defects in
-particular implementations. Since almost all other protocols depend
-upon the DNS and since the potential to be coerced into connecting
-to a rogue system across a network is more or less the definition
-of a network service vulnerability, this represents a broad base
-of risk for most services delivered over the Internet.
+particular implementations. Since [almost all other protocols depend
+upon the DNS](#impact-and-exploitation) and since the potential to
+be coerced into connecting to a rogue system across a network is
+more or less the definition of a network service vulnerability,
+this represents a broad base of risk for most services delivered
+over the Internet.
 
 ### Key Insights
 
@@ -234,7 +236,7 @@ The Kaminsky attack depends upon a few key insights.
 
 1. The QUERYID field in the DNS header, used by DNS resolvers to match DNS responses to queries, is a 16-bit field. Collisions are consequently relatively easy to achieve with the network connectivity available in 2008. This was first pointed out by Bernstein in 1999.
 2. You don't need to attack just a target name; you can introduce data in a response using many, similar names in the same zone, since each one of them can be linked to the target name with RRTYPEs like NS and CNAME. This dispenses with a common reaction to Bernstein's original observation, that the attack window was limited by the period in which accurate data would persist in a cache, masking opportunities to continue the attack.
-3. There are an enormous number of ways of triggering a legitimate client of a DNS resolver to ask a particular question.
+3. There are an enormous number of ways of triggering a legitimate client of a DNS resolver to ask a particular question, more in 2008 than 1999 due to the increase in number and sophistication of services and applications commonly used by end users.
 4. Many resolver systems (in 2008) exhibited very predictable source-port selectoni for outbound DNS queries, making it simple to synthesise attack responses that would be accepted at the UDP layer.
 
 ### Mechanism
