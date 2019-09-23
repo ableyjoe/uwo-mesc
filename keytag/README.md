@@ -101,7 +101,8 @@ hopcount.ca.		2162 IN	RRSIG SOA 13 2 3600 (
 ```
 
 Shown here is the SOA resource record for the `hopcount.ca` zone,
-together with a signature encoded as an RRSIG RR. The RRSIG RDATA
+together with its signature (a DNSSEC signature over the SOA DNS
+resource record) encoded as an RRSIG RR. The RRSIG RDATA
 contains various fields such as inception and expiry dates, but
 importantly for this discussion, it also specifies an owner name
 for the key that should be used to validate this signature,
