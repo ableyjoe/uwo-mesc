@@ -1,5 +1,11 @@
 # Rough Notes
 
+## Quick Links
+
+ - [List of](implementations.md) Open Source DNSSEC key generation and validation implementations
+ - [Roy Arends' walk down keytag lane](Quest_for_the_missing_keytags.pdf)
+ - [Roland van Rijswijk-Deij's musings](RIPE-78-DNS-wg-Keytags.pdf) about the implications and suitability of the keytag algorithm in general
+
 ## Introducing the Problem
 
 DNSSEC signatures that are published in the DNS are bundled with a keytag,
